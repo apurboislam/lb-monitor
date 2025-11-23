@@ -1,0 +1,14 @@
+services:
+  monitor:
+    build: .
+    container_name: lb-monitor
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TOTP_SECRET=${TOTP_SECRET}
+      - LOG_DIR=/opt/caddy/logs
+    volumes:
+      - /opt/caddy/logs:/opt/caddy/logs:ro
