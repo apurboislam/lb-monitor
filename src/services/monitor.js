@@ -14,7 +14,6 @@ const getNetworkStats = async () => {
     try {
         // Live Network Speed
         const networkStats = await si.networkStats('eth0');
-        console.log('Live Network Stats:', JSON.stringify(networkStats));
         const rx_sec = networkStats[0]?.rx_sec || 0; // Bytes per second
         const tx_sec = networkStats[0]?.tx_sec || 0; // Bytes per second
 
@@ -29,9 +28,6 @@ const getNetworkStats = async () => {
             const { stdout } = await execAsync('vnstat -i eth0 --json');
             const data = JSON.parse(stdout);
 
-            console.log('vnstat data success'); // Debug
-            console.log('vnstat data:', JSON.stringify(data)); // Debug
-
             const iface = data.interfaces.find(i => i.name === 'eth0' || i.alias === 'eth0');
 
             if (iface) {
@@ -39,23 +35,15 @@ const getNetworkStats = async () => {
                 const today = new Date();
                 const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-                console.log(`[DEBUG] Looking for date: Year=${today.getFullYear()}, Month=${today.getMonth() + 1}, Day=${today.getDate()}`);
-
                 const dayData = iface.traffic.day.find(d => d.date.year === today.getFullYear() && d.date.month === today.getMonth() + 1 && d.date.day === today.getDate());
                 if (dayData) {
-                    console.log(`[DEBUG] Found day data:`, dayData);
                     bandwidth.today = { rx: dayData.rx, tx: dayData.tx, total: dayData.rx + dayData.tx };
-                } else {
-                    console.log(`[DEBUG] Day data NOT found. Available days:`, iface.traffic.day.map(d => d.date));
                 }
 
                 // Month
                 const monthData = iface.traffic.month.find(m => m.date.year === today.getFullYear() && m.date.month === today.getMonth() + 1);
                 if (monthData) {
-                    console.log(`[DEBUG] Found month data:`, monthData);
                     bandwidth.month = { rx: monthData.rx, tx: monthData.tx, total: monthData.rx + monthData.tx };
-                } else {
-                    console.log(`[DEBUG] Month data NOT found. Available months:`, iface.traffic.month.map(m => m.date));
                 }
             } else {
                 console.log('vnstat: eth0 interface not found in DB');
@@ -74,7 +62,6 @@ const getNetworkStats = async () => {
             speed: { rx: rx_sec, tx: tx_sec },
             bandwidth
         };
-        // console.log('[DEBUG] Final Network Stats:', JSON.stringify(result));
         return result;
     } catch (e) {
         console.error('Error fetching network stats:', e);
@@ -105,7 +92,8 @@ const startMonitoring = () => {
                     size: d.size,
                     used: d.used,
                     percentage: Math.round(d.use)
-                }))
+                })),
+                network
             };
 
             if (io) {
