@@ -3,8 +3,7 @@ services:
     build: .
     container_name: lb-monitor
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    network_mode: host
     environment:
       - NODE_ENV=production
       - PORT=3000

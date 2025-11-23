@@ -14,6 +14,7 @@ const getNetworkStats = async () => {
     try {
         // Live Network Speed
         const networkStats = await si.networkStats('eth0');
+        // console.log('Live Network Stats:', networkStats);
         const rx_sec = networkStats[0]?.rx_sec || 0; // Bytes per second
         const tx_sec = networkStats[0]?.tx_sec || 0; // Bytes per second
 
@@ -28,7 +29,8 @@ const getNetworkStats = async () => {
             const { stdout } = await execAsync('vnstat -i eth0 --json');
             const data = JSON.parse(stdout);
 
-            // console.log('vnstat data:', JSON.stringify(data)); // Debug
+            console.log('vnstat data success'); // Debug
+            console.log('vnstat data:', JSON.stringify(data)); // Debug
 
             const iface = data.interfaces.find(i => i.name === 'eth0' || i.alias === 'eth0');
 
