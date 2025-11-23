@@ -107,6 +107,16 @@ const startWatching = () => {
         .on('change', filePath => {
             readNewLines(filePath);
         });
+
+    // Manual Polling Fallback
+    // Chokidar can be unreliable with mounted volumes on some systems.
+    // We manually check file sizes every second to ensure we don't miss updates.
+    setInterval(() => {
+        Object.keys(domainFiles).forEach(domain => {
+            const filePath = domainFiles[domain];
+            readNewLines(filePath);
+        });
+    }, 1000);
 };
 
 const readNewLines = (filePath) => {
