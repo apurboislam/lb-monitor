@@ -117,17 +117,23 @@ const readNewLines = (filePath) => {
     const stats = fs.statSync(filePath);
     const newSize = stats.size;
 
+    // console.log(`[DEBUG] Check ${filePath}: Old=${currentOffset}, New=${newSize}`);
+
     if (newSize < currentOffset) {
         // File was rotated/truncated
+        console.log(`[INFO] File truncated: ${filePath}. Resetting offset.`);
         fileOffsets[filePath] = 0;
         return;
     }
 
     if (newSize === currentOffset) return;
 
+    console.log(`[INFO] Reading new content from ${filePath}: ${currentOffset} -> ${newSize}`);
+
     const stream = fs.createReadStream(filePath, {
         start: currentOffset,
-        end: newSize
+        end: newSize - 1,
+        encoding: 'utf8'
     });
 
     let buffer = '';
@@ -151,11 +157,16 @@ const readNewLines = (filePath) => {
                 }
             } catch (e) {
                 // Only log error if it's not a partial line from tailing
-                if (currentOffset === 0 || line.length < 1000) {
+                // and if it looks like a substantial line
+                if (line.length > 10) {
                     console.error(`Failed to parse JSON line in ${filePath}:`, e.message);
                 }
             }
         });
+    });
+
+    stream.on('error', (err) => {
+        console.error(`Error reading file ${filePath}:`, err);
     });
 };
 

@@ -12,6 +12,9 @@ const memVal = document.getElementById('mem-val');
 const memBar = document.getElementById('mem-bar');
 const diskVal = document.getElementById('disk-val');
 const diskBar = document.getElementById('disk-bar');
+const netSpeedVal = document.getElementById('net-speed-val');
+const bwTodayVal = document.getElementById('bw-today-val');
+const bwMonthVal = document.getElementById('bw-month-val');
 const domainListEl = document.getElementById('domain-list');
 const logsContainer = document.getElementById('logs-container');
 const currentDomainEl = document.getElementById('current-domain');
@@ -21,6 +24,16 @@ const maxLogsSelect = document.getElementById('max-logs-select');
 const modal = document.getElementById('log-modal');
 const modalBody = document.getElementById('modal-body');
 const closeModalBtn = document.getElementById('close-modal');
+
+// Helper to format bytes
+function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
 
 // System Stats
 socket.on('stats', (stats) => {
@@ -35,6 +48,19 @@ socket.on('stats', (stats) => {
         const rootDisk = stats.disk[0];
         diskVal.textContent = `${rootDisk.percentage}%`;
         diskBar.style.width = `${rootDisk.percentage}%`;
+    }
+
+    // Network Stats
+    if (stats.network) {
+        const rx = formatBytes(stats.network.speed.rx);
+        const tx = formatBytes(stats.network.speed.tx);
+        netSpeedVal.textContent = `${rx}/s / ${tx}/s`;
+
+        const todayTotal = formatBytes(stats.network.bandwidth.today.total);
+        bwTodayVal.textContent = todayTotal;
+
+        const monthTotal = formatBytes(stats.network.bandwidth.month.total);
+        bwMonthVal.textContent = monthTotal;
     }
 });
 

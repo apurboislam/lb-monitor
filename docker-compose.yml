@@ -12,3 +12,4 @@ services:
       - LOG_DIR=/opt/caddy/logs
     volumes:
       - /opt/caddy/logs:/opt/caddy/logs:ro
+      - /var/lib/vnstat:/var/lib/vnstat:ro
