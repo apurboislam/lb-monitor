@@ -3,7 +3,7 @@ const socket = io();
 // State
 let currentDomain = null;
 const domains = new Set();
-let maxLogs = 100;
+let maxLogs = 50;
 
 // Elements
 const cpuVal = document.getElementById('cpu-val');

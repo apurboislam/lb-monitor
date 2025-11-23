@@ -24,8 +24,12 @@ const getNetworkStats = async () => {
         };
 
         try {
-            const { stdout } = await execAsync('vnstat --json');
+            // Explicitly query eth0 from the mounted DB
+            const { stdout } = await execAsync('vnstat -i eth0 --json');
             const data = JSON.parse(stdout);
+
+            // console.log('vnstat data:', JSON.stringify(data)); // Debug
+
             const iface = data.interfaces.find(i => i.name === 'eth0' || i.alias === 'eth0');
 
             if (iface) {
@@ -43,9 +47,17 @@ const getNetworkStats = async () => {
                 if (monthData) {
                     bandwidth.month = { rx: monthData.rx, tx: monthData.tx, total: monthData.rx + monthData.tx };
                 }
+            } else {
+                console.log('vnstat: eth0 interface not found in DB');
             }
         } catch (e) {
             console.error('Error fetching vnstat data:', e.message);
+            // If command failed, it might be because the DB version is different or permissions.
+            // Try listing interfaces to debug
+            try {
+                const { stdout } = await execAsync('vnstat --iflist');
+                console.log('vnstat available interfaces:', stdout);
+            } catch (ex) { /* ignore */ }
         }
 
         return {
