@@ -181,7 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     x: { display: false }
                 },
-                animation: { duration: 0 }
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
             }
         });
     }
