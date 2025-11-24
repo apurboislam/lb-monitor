@@ -8,7 +8,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - TOTP_SECRET=${TOTP_SECRET}
-      - LOG_DIR=/opt/caddy/logs
+      - LOG_DIR=${LOG_DIR}
     volumes:
-      - /opt/caddy/logs:/opt/caddy/logs:ro
+      - ${LOG_DIR}:/opt/caddy/logs:ro
       - /var/lib/vnstat:/var/lib/vnstat:ro
