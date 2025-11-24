@@ -13,7 +13,8 @@ const memVal = document.getElementById('mem-val');
 const memBar = document.getElementById('mem-bar');
 const diskVal = document.getElementById('disk-val');
 const diskBar = document.getElementById('disk-bar');
-const netSpeedVal = document.getElementById('net-speed-val');
+const netSpeedDown = document.getElementById('net-speed-down');
+const netSpeedUp = document.getElementById('net-speed-up');
 const bwTodayVal = document.getElementById('bw-today-val');
 const bwMonthVal = document.getElementById('bw-month-val');
 const domainListEl = document.getElementById('domain-list');
@@ -66,7 +67,9 @@ socket.on('stats', (stats) => {
     if (stats.network) {
         const rx = formatSpeed(stats.network.speed.rx);
         const tx = formatSpeed(stats.network.speed.tx);
-        netSpeedVal.textContent = `${rx} / ${tx}`;
+
+        if (netSpeedDown) netSpeedDown.textContent = rx;
+        if (netSpeedUp) netSpeedUp.textContent = tx;
 
         const todayTotal = formatBytes(stats.network.bandwidth.today.total);
         bwTodayVal.textContent = todayTotal;
