@@ -191,6 +191,7 @@ function openModal(entry) {
         ['Duration', duration],
         ['Remote IP', entry.request?.remote_ip || '-'],
         ['Real User IP', entry.request?.headers?.['X-Forwarded-For']?.[0] || entry.request?.client_ip || '-'],
+        ['Ray ID', entry.request?.headers?.['Cf-Ray']?.[0] || entry.request?.headers?.['cf-ray']?.[0] || '-'],
         ['User Agent', entry.request?.headers?.['User-Agent']?.[0] || '-'],
         ['Referer', entry.request?.headers?.['Referer']?.[0] || '-'],
         ['Host', entry.request?.host || '-']
