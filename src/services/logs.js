@@ -40,6 +40,9 @@ const init = (socketIo) => {
         });
 
         socket.on('fetch_history', (domain) => {
+            if (typeof domain !== 'string' || !domains.has(domain)) {
+                return; // Invalid domain
+            }
             const filePath = domainFiles[domain];
             if (filePath && fs.existsSync(filePath)) {
                 console.log(`Fetching history for ${domain} from ${filePath}`);
