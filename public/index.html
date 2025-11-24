@@ -15,6 +15,318 @@
 </head>
 
 <body class="bg-body-tertiary">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="toast-notification" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <span id="toast-icon"></span>
+                    <span id="toast-message"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Top Bar -->
+    <nav class="navbar navbar-dark bg-dark d-md-none fixed-top border-bottom border-secondary-subtle shadow-sm mobile-header">
+        <div class="container-fluid">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"
+                aria-controls="sidebarMenu" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand fw-bold d-flex align-items-center m-0" href="#">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
+                    <path d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
+                </svg>
+                VPS Monitor
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid h-100 p-0">
+        <div class="row h-100 g-0">
+            <!-- Sidebar -->
+            <div class="sidebar col-md-3 col-lg-2 p-0 bg-dark border-end border-secondary-subtle h-100 d-flex flex-column offcanvas-md offcanvas-start"
+                tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+
+                <div class="offcanvas-header border-bottom border-secondary-subtle">
+                    <h5 class="offcanvas-title fw-bold text-light d-flex align-items-center" id="sidebarMenuLabel">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
+                            <path d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
+                        </svg>
+                        VPS Monitor
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                </div>
+
+                <div class="offcanvas-body d-flex flex-column p-3 h-100 overflow-y-auto sidebar-scrollable">
+                    <!-- Desktop Title -->
+                    <div class="d-none d-md-flex align-items-center mb-4 px-2 text-light fw-bold fs-5 sidebar-brand">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
+                            <path d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
+                        </svg>
+                        VPS Monitor
+                    </div>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-2 mt-2 mb-2 text-uppercase text-secondary small fw-bold">
+                        <span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            Domains
+                        </span>
+                        <span id="domain-count" class="badge bg-secondary rounded-pill">0</span>
+                    </h6>
+
+                    <div id="domain-list" class="list-group list-group-flush mb-auto gap-1">
+                        <!-- Domains injected here -->
+                        <div class="domain-skeleton">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top border-secondary-subtle sidebar-footer">
+                        <button id="logout-btn" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 logout-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-0 h-100 overflow-hidden d-flex flex-column main-content">
+
+                <!-- Stats Grid - Fixed Position -->
+                <div class="stats-container">
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 p-3">
+                        <!-- CPU -->
+                        <div class="col">
+                            <div class="stat-card">
+                                <div class="stat-icon stat-icon-cpu">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                                        <rect x="9" y="9" width="6" height="6"></rect>
+                                        <line x1="9" y1="1" x2="9" y2="4"></line>
+                                        <line x1="15" y1="1" x2="15" y2="4"></line>
+                                        <line x1="9" y1="20" x2="9" y2="23"></line>
+                                        <line x1="15" y1="20" x2="15" y2="23"></line>
+                                        <line x1="20" y1="9" x2="23" y2="9"></line>
+                                        <line x1="20" y1="14" x2="23" y2="14"></line>
+                                        <line x1="1" y1="9" x2="4" y2="9"></line>
+                                        <line x1="1" y1="14" x2="4" y2="14"></line>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">CPU Load</div>
+                                    <div class="stat-value" id="cpu-val">0%</div>
+                                    <div class="progress stat-progress">
+                                        <div id="cpu-bar" class="progress-bar progress-bar-cpu" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Memory -->
+                        <div class="col">
+                            <div class="stat-card">
+                                <div class="stat-icon stat-icon-memory">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 20h.01M7 20v-4"></path>
+                                        <path d="M12 20v-8"></path>
+                                        <path d="M17 20V8"></path>
+                                        <path d="M22 4v16"></path>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Memory</div>
+                                    <div class="stat-value" id="mem-val">0%</div>
+                                    <div class="progress stat-progress">
+                                        <div id="mem-bar" class="progress-bar progress-bar-memory" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Disk -->
+                        <div class="col">
+                            <div class="stat-card">
+                                <div class="stat-icon stat-icon-disk">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Disk Usage</div>
+                                    <div class="stat-value" id="disk-val">0%</div>
+                                    <div class="progress stat-progress">
+                                        <div id="disk-bar" class="progress-bar progress-bar-disk" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Net Speed -->
+                        <div class="col">
+                            <div class="stat-card">
+                                <div class="stat-icon stat-icon-network">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                                        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Network Speed</div>
+                                    <div class="network-speeds">
+                                        <div class="speed-item">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
+                                                <path d="M12 5v14M19 12l-7 7-7-7" />
+                                            </svg>
+                                            <span id="net-speed-down" class="speed-value">0 B/s</span>
+                                        </div>
+                                        <div class="speed-item">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                                                <path d="M12 19V5M5 12l7-7 7 7" />
+                                            </svg>
+                                            <span id="net-speed-up" class="speed-value">0 B/s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bandwidth Row -->
+                    <div class="row g-3 px-3 pb-3">
+                        <div class="col-12">
+                            <div class="bandwidth-card">
+                                <div class="bandwidth-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                </div>
+                                <div class="bandwidth-content">
+                                    <div class="bandwidth-item">
+                                        <span class="bandwidth-label">Today</span>
+                                        <span id="bw-today-val" class="bandwidth-value">0 MB</span>
+                                    </div>
+                                    <div class="bandwidth-divider"></div>
+                                    <div class="bandwidth-item">
+                                        <span class="bandwidth-label">This Month</span>
+                                        <span id="bw-month-val" class="bandwidth-value">0 GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Viewer Section -->
+                <div class="logs-section flex-grow-1 d-flex flex-column overflow-hidden">
+                    <!-- Log Header -->
+                    <div class="logs-header">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info flex-shrink-0">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <h2 class="logs-title m-0" id="current-domain">Select a Domain</h2>
+                        </div>
+                        <div class="logs-controls">
+                            <select id="max-logs-select" class="form-select form-select-sm logs-select">
+                                <option value="5">5 logs</option>
+                                <option value="10">10 logs</option>
+                                <option value="25">25 logs</option>
+                                <option value="50" selected>50 logs</option>
+                                <option value="100">100 logs</option>
+                                <option value="200">200 logs</option>
+                                <option value="500">500 logs</option>
+                                <option value="1000">1000 logs</option>
+                            </select>
+                            <button id="clear-logs" class="btn btn-sm btn-outline-secondary clear-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Logs Container -->
+                    <div class="logs-content flex-grow-1 overflow-y-auto">
+                        <div id="logs-container" class="logs-list">
+                            <!-- Logs injected here -->
+                            <div class="empty-state">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <p class="empty-state-text">No logs yet</p>
+                                <p class="empty-state-subtext">Select a domain to view request logs</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Log Details Modal -->
+    <div class="modal fade" id="log-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content log-modal-content">
+                <div class="modal-header log-modal-header">
+                    <h5 class="modal-title d-flex align-items-center gap-2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Request Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body log-modal-body" id="modal-body">
+                    <!-- Details injected here -->
+                </div>
+                <div class="modal-footer log-modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>
 
     <!-- Mobile Navbar -->
     <nav class="navbar navbar-dark bg-dark d-md-none fixed-top border-bottom border-secondary-subtle">
