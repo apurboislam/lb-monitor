@@ -2,6 +2,8 @@
 
 **LB Monitor** is a lightweight, real-time monitoring solution for Linux VPS environments running Caddy. It provides a secure, web-based dashboard to visualize system statistics (CPU, RAM, Disk, Network) and stream Caddy logs in real-time.
 
+![Web Dashboard Screenshot](images/ss1.png)
+
 ## Features
 
 - **Real-time System Stats**: Monitor CPU usage, Memory consumption, Disk I/O, and Network traffic live.
@@ -51,6 +53,8 @@
     TOTP_SECRET=YOUR_BASE32_TOTP_SECRET
     # Path to your Caddy logs directory
     LOG_DIR=/opt/caddy/logs
+    # Custom Panel Name (Optional, default: APS LB)
+    PANEL_NAME=My Custom Panel
     ```
 
     > **Note:** You can generate a `TOTP_SECRET` using an online tool or a script. This secret is used to generate the 2FA codes in your authenticator app (e.g., Google Authenticator, Authy).

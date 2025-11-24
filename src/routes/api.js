@@ -53,4 +53,8 @@ router.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
+router.get('/config', (req, res) => {
+    res.json({ panelName: require('../config').PANEL_NAME });
+});
+
 module.exports = router;

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APS LB Dashboard</title>
+    <title>Dashboard</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +31,7 @@
                 <div class="d-flex flex-column h-100 p-3">
                     <a href="#"
                         class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-white text-decoration-none fs-4 fw-bold p-2">
-                        <i class="fa-solid fa-server me-2 text-primary"></i> APS LB
+                        <i class="fa-solid fa-server me-2 text-primary"></i> <span class="panel-name-text">APS LB</span>
                     </a>
                     <hr class="text-secondary">
                     <h6
@@ -279,6 +279,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        // Fetch Panel Name
+        fetch('/api/config')
+            .then(res => res.json())
+            .then(data => {
+                if (data.panelName) {
+                    document.title = `${data.panelName} Dashboard`;
+                    document.querySelectorAll('.panel-name-text').forEach(el => el.textContent = data.panelName);
+                }
+            })
+            .catch(console.error);
+    </script>
 </body>
 
 </html>
