@@ -1,12 +1,46 @@
 /* Global Styles */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #0d1117; /* GitHub Dark Dimmed style */
+    background-color: #0d1117;
+    /* GitHub Dark Dimmed style */
     color: #c9d1d9;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     color: #ffffff;
+}
+
+/* Blinking Dot */
+.live-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1.5s infinite;
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+}
+
+@keyframes blink {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
 }
 
 /* Login Container */
@@ -39,8 +73,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar .nav-link:hover,
 .sidebar .nav-link.active {
-    background-color: rgba(13, 110, 253, 0.15); /* Primary color tint */
-    color: #58a6ff; /* Lighter blue */
+    background-color: rgba(13, 110, 253, 0.15);
+    /* Primary color tint */
+    color: #58a6ff;
+    /* Lighter blue */
 }
 
 .sidebar-heading {
@@ -50,7 +86,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Cards */
 .card {
-    background-color: #161b22; /* Slightly lighter than body */
+    background-color: #161b22;
+    /* Slightly lighter than body */
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -78,7 +115,8 @@ h1, h2, h3, h4, h5, h6 {
     --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
 }
 
-.table td, .table th {
+.table td,
+.table th {
     border-color: rgba(255, 255, 255, 0.1);
     padding: 1rem 1.5rem;
 }
@@ -88,22 +126,69 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Badge Colors for Methods */
-.badge-method-GET { background-color: rgba(13, 110, 253, 0.2); color: #58a6ff; border: 1px solid rgba(13, 110, 253, 0.4); }
-.badge-method-POST { background-color: rgba(25, 135, 84, 0.2); color: #3fb950; border: 1px solid rgba(25, 135, 84, 0.4); }
-.badge-method-PUT { background-color: rgba(255, 193, 7, 0.2); color: #d29922; border: 1px solid rgba(255, 193, 7, 0.4); }
-.badge-method-DELETE { background-color: rgba(220, 53, 69, 0.2); color: #f85149; border: 1px solid rgba(220, 53, 69, 0.4); }
-.badge-method-PATCH { background-color: rgba(108, 117, 125, 0.2); color: #8b949e; border: 1px solid rgba(108, 117, 125, 0.4); }
+.badge-method-GET {
+    background-color: rgba(13, 110, 253, 0.2);
+    color: #58a6ff;
+    border: 1px solid rgba(13, 110, 253, 0.4);
+}
+
+.badge-method-POST {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #3fb950;
+    border: 1px solid rgba(25, 135, 84, 0.4);
+}
+
+.badge-method-PUT {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #d29922;
+    border: 1px solid rgba(255, 193, 7, 0.4);
+}
+
+.badge-method-DELETE {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #f85149;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+.badge-method-PATCH {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #8b949e;
+    border: 1px solid rgba(108, 117, 125, 0.4);
+}
 
 /* Status Codes */
-.text-status-2xx { color: #3fb950; } /* Green */
-.text-status-3xx { color: #58a6ff; } /* Blue */
-.text-status-4xx { color: #d29922; } /* Yellow/Orange */
-.text-status-5xx { color: #f85149; } /* Red */
+.text-status-2xx {
+    color: #3fb950;
+}
+
+/* Green */
+.text-status-3xx {
+    color: #58a6ff;
+}
+
+/* Blue */
+.text-status-4xx {
+    color: #d29922;
+}
+
+/* Yellow/Orange */
+.text-status-5xx {
+    color: #f85149;
+}
+
+/* Red */
 
 /* Modal Word Break */
 .modal-body {
@@ -134,9 +219,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 /* Scrollbar */
@@ -162,17 +255,18 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 767.98px) {
     .sidebar {
         position: fixed;
-        top: 56px; /* Below navbar */
+        top: 56px;
+        /* Below navbar */
         height: calc(100vh - 56px);
         width: 250px;
         transform: translateX(-100%);
         transition: transform 0.3s ease-in-out;
     }
-    
+
     .sidebar.show {
         transform: translateX(0);
     }
-    
+
     main {
         padding-top: 0;
     }
