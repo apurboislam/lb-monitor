@@ -116,10 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
             bwMonth.textContent = formatBytes(stats.network.bandwidth.month.total);
         }
 
-        // Uptime (Not sent by backend currently, let's calculate client-side or ignore if not available)
-        // If backend doesn't send uptime, we can't show it accurately.
-        // For now, placeholder or maybe backend sends it? Backend code didn't show uptime in stats.
-        // We'll leave it as is or maybe add it to backend later.
+        // Uptime
+        if (stats.uptime) {
+            const d = Math.floor(stats.uptime / (3600 * 24));
+            const h = Math.floor(stats.uptime % (3600 * 24) / 3600);
+            const m = Math.floor(stats.uptime % 3600 / 60);
+            const s = Math.floor(stats.uptime % 60);
+            uptimeVal.textContent = `${d}d ${h}h ${m}m ${s}s`;
+        }
     }
 
     function initChart() {
@@ -226,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentDomain = domain;
         currentDomainBadge.textContent = domain;
-        pageTitle.textContent = `Logs: ${domain}`;
+        // pageTitle.textContent = `Logs: ${domain}`; // Keep System Overview static
 
         // Update active state in sidebar
         renderSidebar();

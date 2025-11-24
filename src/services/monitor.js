@@ -72,11 +72,12 @@ const getNetworkStats = async () => {
 const startMonitoring = () => {
     setInterval(async () => {
         try {
-            const [cpu, mem, disk, network] = await Promise.all([
+            const [cpu, mem, disk, network, time] = await Promise.all([
                 si.currentLoad(),
                 si.mem(),
                 si.fsSize(),
-                getNetworkStats()
+                getNetworkStats(),
+                si.time()
             ]);
 
             const stats = {
@@ -93,7 +94,8 @@ const startMonitoring = () => {
                     used: d.used,
                     percentage: Math.round(d.use)
                 })),
-                network
+                network,
+                uptime: time.uptime
             };
 
             if (io) {
