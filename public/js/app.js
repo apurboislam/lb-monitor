@@ -176,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100,
                         grid: { color: 'rgba(255, 255, 255, 0.1)' },
                         ticks: { color: '#8b949e' }
                     },
