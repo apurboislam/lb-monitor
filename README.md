@@ -76,12 +76,14 @@ The Docker configuration uses `network_mode: host` to allow the application to a
 
 2.  **Build and Run:**
     ```bash
-    docker-compose up -d --build
+    docker compose up -d --build
     ```
 
 3.  **Stop:**
     ```bash
-    docker-compose down
+    docker compose down
+    # Remove volumes
+    docker compose down -v
     ```
 
 ## API Endpoints
