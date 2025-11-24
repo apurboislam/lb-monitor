@@ -63,6 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!domains.has(domain)) {
             domains.add(domain);
             renderSidebar();
+
+            // Auto-select first domain
+            if (!currentDomain) {
+                switchDomain(domain);
+            }
         }
     });
 
