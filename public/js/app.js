@@ -1,256 +1,218 @@
 const socket = io();
 
 // State
-const state = {
-    currentDomain: null,
-    domains: new Set(),
-    maxLogs: 50,
-    isMobileMenuOpen: false
-};
+let currentDomain = null;
+const domains = new Set();
+let maxLogs = 50;
 
-// DOM Elements
-const ui = {
-    cpuVal: document.getElementById('cpu-val'),
-    cpuBar: document.getElementById('cpu-bar'),
-    memVal: document.getElementById('mem-val'),
-    memBar: document.getElementById('mem-bar'),
+// Elements
+const cpuVal = document.getElementById('cpu-val');
+const cpuBar = document.getElementById('cpu-bar');
+const memVal = document.getElementById('mem-val');
+const memBar = document.getElementById('mem-bar');
+const diskVal = document.getElementById('disk-val');
+const diskBar = document.getElementById('disk-bar');
+const netSpeedVal = document.getElementById('net-speed-val');
+const bwTodayVal = document.getElementById('bw-today-val');
+const bwMonthVal = document.getElementById('bw-month-val');
+const domainListEl = document.getElementById('domain-list');
+const logsContainer = document.getElementById('logs-container');
+const currentDomainEl = document.getElementById('current-domain');
+const clearLogsBtn = document.getElementById('clear-logs');
+const logoutBtn = document.getElementById('logout-btn');
+const maxLogsSelect = document.getElementById('max-logs-select');
+const modal = document.getElementById('log-modal');
+const modalBody = document.getElementById('modal-body');
+const closeModalBtn = document.getElementById('close-modal');
 
-    netDown: document.getElementById('net-down'),
-    netUp: document.getElementById('net-up'),
-    bwToday: document.getElementById('bw-today-val'),
-    bwMonth: document.getElementById('bw-month-val'),
-
-    domainList: document.getElementById('domain-list'),
-    logsContainer: document.getElementById('logs-container'),
-    currentDomainTitle: document.getElementById('current-domain'),
-
-    modal: document.getElementById('log-modal'),
-    modalBody: document.getElementById('modal-body'),
-
-    sidebar: document.getElementById('sidebar'),
-    menuToggle: document.getElementById('menu-toggle'),
-    menuClose: document.getElementById('menu-close')
-};
-
-// --- Utilities ---
-
-function formatBytes(bytes, decimals = 1) {
+// Helper to format bytes
+function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 B';
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
-function getMethodClass(method) {
-    const m = (method || '').toUpperCase();
-    if (['GET', 'POST', 'PUT', 'DELETE'].includes(m)) return `method-${m}`;
-    return '';
-}
-
-function getStatusClass(status) {
-    const s = parseInt(status);
-    if (s >= 500) return 'status-5xx';
-    if (s >= 400) return 'status-4xx';
-    if (s >= 300) return 'status-3xx';
-    return 'status-2xx';
-}
-
-// --- Socket Events ---
-
+// System Stats
 socket.on('stats', (stats) => {
-    // CPU
-    ui.cpuVal.textContent = `${stats.cpu}%`;
-    ui.cpuBar.style.width = `${stats.cpu}%`;
+    cpuVal.textContent = `${stats.cpu}%`;
+    cpuBar.style.width = `${stats.cpu}%`;
 
-    // Memory
-    ui.memVal.textContent = `${stats.mem.percentage}%`;
-    ui.memBar.style.width = `${stats.mem.percentage}%`;
+    memVal.textContent = `${stats.mem.percentage}%`;
+    memBar.style.width = `${stats.mem.percentage}%`;
 
-    // Network Speed
-    if (stats.network && stats.network.speed) {
-        ui.netDown.textContent = formatBytes(stats.network.speed.rx) + '/s';
-        ui.netUp.textContent = formatBytes(stats.network.speed.tx) + '/s';
+    // Use the first disk (usually root)
+    if (stats.disk && stats.disk.length > 0) {
+        const rootDisk = stats.disk[0];
+        diskVal.textContent = `${rootDisk.percentage}%`;
+        diskBar.style.width = `${rootDisk.percentage}%`;
     }
 
-    // Bandwidth
-    if (stats.network && stats.network.bandwidth) {
-        ui.bwToday.textContent = formatBytes(stats.network.bandwidth.today.total);
-        ui.bwMonth.textContent = formatBytes(stats.network.bandwidth.month.total);
+    // Network Stats
+    if (stats.network) {
+        const rx = formatBytes(stats.network.speed.rx);
+        const tx = formatBytes(stats.network.speed.tx);
+        netSpeedVal.textContent = `${rx}/s / ${tx}/s`;
+
+        const todayTotal = formatBytes(stats.network.bandwidth.today.total);
+        bwTodayVal.textContent = todayTotal;
+
+        const monthTotal = formatBytes(stats.network.bandwidth.month.total);
+        bwMonthVal.textContent = monthTotal;
     }
 });
 
+// Log Handling
 socket.on('new_domain', (domain) => {
-    if (!state.domains.has(domain)) {
-        state.domains.add(domain);
+    if (!domains.has(domain)) {
+        domains.add(domain);
+        renderDomainList();
+    }
+});
+
+socket.on('log_all', (data) => {
+    const { domain } = data;
+    if (!domains.has(domain)) {
+        domains.add(domain);
         renderDomainList();
     }
 });
 
 socket.on('log', (data) => {
-    if (data.domain === state.currentDomain) {
-        addLogEntry(data.entry);
+    const { domain, entry } = data;
+    if (domain === currentDomain) {
+        appendLog(entry);
     }
 });
 
-socket.on('log_all', (data) => {
-    if (!state.domains.has(data.domain)) {
-        state.domains.add(data.domain);
-        renderDomainList();
-    }
-});
-
-// --- UI Logic ---
-
+// UI Functions
 function renderDomainList() {
-    ui.domainList.innerHTML = '';
-
-    if (state.domains.size === 0) {
-        ui.domainList.innerHTML = '<div class="empty-state-small">Scanning...</div>';
-        return;
-    }
-
-    state.domains.forEach(domain => {
+    domainListEl.innerHTML = '';
+    domains.forEach(domain => {
         const div = document.createElement('div');
-        div.className = `domain-item ${domain === state.currentDomain ? 'active' : ''}`;
-        div.innerHTML = `<i data-lucide="globe" style="width:14px; display:inline; margin-right:8px"></i>${domain}`;
+        div.className = `domain-item ${domain === currentDomain ? 'active' : ''}`;
+        div.textContent = domain;
         div.onclick = () => switchDomain(domain);
-        ui.domainList.appendChild(div);
+        domainListEl.appendChild(div);
     });
-
-    // Re-init icons for new elements
-    if (window.lucide) lucide.createIcons();
 }
 
 function switchDomain(domain) {
-    if (state.currentDomain) {
-        socket.emit('leave_room', `logs:${state.currentDomain}`);
+    if (currentDomain) {
+        socket.emit('leave_room', `logs:${currentDomain}`);
     }
 
-    state.currentDomain = domain;
-    ui.currentDomainTitle.textContent = domain;
-    ui.logsContainer.innerHTML = ''; // Clear current logs
-
-    renderDomainList(); // Update active class
+    currentDomain = domain;
+    currentDomainEl.textContent = domain;
+    logsContainer.innerHTML = ''; // Clear logs on switch
+    renderDomainList(); // Update active state
 
     socket.emit('join_room', `logs:${domain}`);
     socket.emit('fetch_history', domain);
-
-    // Close mobile menu if open
-    if (state.isMobileMenuOpen) toggleMobileMenu();
 }
 
-function addLogEntry(entry) {
-    // Remove empty state if present
-    const emptyState = ui.logsContainer.querySelector('.empty-feed');
-    if (emptyState) emptyState.remove();
+function appendLog(entry) {
+    const div = document.createElement('div');
+    div.className = 'log-card';
 
-    const row = document.createElement('div');
-    row.className = 'log-row';
+    const status = entry.status || '-';
+    const statusClass = status >= 500 ? 'status-5xx' :
+        status >= 400 ? 'status-4xx' :
+            status >= 200 ? 'status-2xx' : '';
 
-    const time = new Date(entry.ts * 1000).toLocaleTimeString([], { hour12: false });
+    const ts = new Date(entry.ts * 1000).toLocaleTimeString();
     const method = entry.request?.method || '-';
-    const status = entry.status || 0;
-    const uri = entry.request?.uri || '/';
+    const uri = entry.request?.uri || '-';
 
-    // Store entry data for modal
-    row.dataset.entry = JSON.stringify(entry);
-
-    row.innerHTML = `
-        <div class="col-time">${time}</div>
-        <div class="col-method"><span class="badge ${getMethodClass(method)}">${method}</span></div>
-        <div class="col-status"><span class="${getStatusClass(status)}">${status}</span></div>
-        <div class="col-path" title="${uri}">${uri}</div>
-        <div class="col-action">
-            <button class="icon-btn view-details">
-                <i data-lucide="eye" style="width:16px;"></i>
-            </button>
+    div.innerHTML = `
+        <div class="log-time">${ts}</div>
+        <div class="log-info">
+            <span class="method ${method}">${method}</span>
+            <span class="log-path" title="${uri}">${uri}</span>
         </div>
+        <div class="status-badge ${statusClass}">${status}</div>
+        <button class="view-btn" title="View Details">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
     `;
 
-    // Add click event for details
-    row.querySelector('.view-details').onclick = () => openModal(entry);
+    // Add click handler for view button
+    const viewBtn = div.querySelector('.view-btn');
+    viewBtn.onclick = () => openModal(entry);
 
-    // Prepend
-    ui.logsContainer.insertBefore(row, ui.logsContainer.firstChild);
+    logsContainer.insertBefore(div, logsContainer.firstChild);
 
-    // Cleanup old logs
-    while (ui.logsContainer.children.length > state.maxLogs) {
-        ui.logsContainer.removeChild(ui.logsContainer.lastChild);
+    // Enforce max logs limit
+    while (logsContainer.children.length > maxLogs) {
+        logsContainer.removeChild(logsContainer.lastChild);
     }
-
-    if (window.lucide) lucide.createIcons({ root: row });
 }
 
-// --- Modal ---
-
 function openModal(entry) {
-    const d = new Date(entry.ts * 1000);
-    const meta = entry.request || {};
+    const ts = new Date(entry.ts * 1000).toLocaleString();
+    const duration = entry.duration ? (entry.duration * 1000).toFixed(2) + 'ms' : '0ms';
 
-    const fields = [
-        { label: 'Time', val: d.toLocaleString() },
-        { label: 'Full URL', val: `${meta.proto}://${meta.host}${meta.uri}` },
-        { label: 'Client IP', val: meta.client_ip || 'Unknown' },
-        { label: 'User Agent', val: meta.headers?.['User-Agent']?.[0] || '-' },
-        { label: 'Latency', val: (entry.duration * 1000).toFixed(2) + ' ms' },
-        { label: 'CF Ray ID', val: meta.headers?.['Cf-Ray']?.[0] || '-' }
+    const rows = [
+        ['Timestamp', ts],
+        ['Method', entry.request?.method || '-'],
+        ['URI', entry.request?.uri || '-'],
+        ['Status', entry.status || '-'],
+        ['Duration', duration],
+        ['Remote IP (Edge)', entry.request?.remote_ip || '-'],
+        ['Real User IP', entry.request?.headers?.['X-Forwarded-For']?.[0] || entry.request?.client_ip || '-'],
+        ['CF Ray ID', entry.request?.headers?.['Cf-Ray']?.[0] || '-'],
+        ['User Agent', entry.request?.headers?.['User-Agent']?.[0] || '-'],
+        ['Referer', entry.request?.headers?.['Referer']?.[0] || '-'],
+        ['Protocol', entry.request?.proto || '-'],
+        ['Host', entry.request?.host || '-']
     ];
 
-    ui.modalBody.innerHTML = fields.map(f => `
-        <div class="detail-row">
-            <span class="detail-label">${f.label}</span>
-            <div class="detail-val">${f.val}</div>
+    modalBody.innerHTML = rows.map(([label, value]) => `
+        <div class="modal-row">
+            <div class="modal-label">${label}</div>
+            <div class="modal-value">${value}</div>
         </div>
     `).join('');
 
-    ui.modal.classList.add('active');
+    modal.classList.add('show');
 }
 
-document.getElementById('close-modal').onclick = () => ui.modal.classList.remove('active');
-ui.modal.onclick = (e) => {
-    if (e.target === ui.modal) ui.modal.classList.remove('active');
+// Event Listeners
+clearLogsBtn.onclick = () => {
+    logsContainer.innerHTML = '';
 };
 
-// --- Settings & Actions ---
-
-document.getElementById('clear-logs').onclick = () => {
-    ui.logsContainer.innerHTML = `
-        <div class="empty-feed">
-            <i data-lucide="check-circle" style="opacity: 0.2; width: 48px; height: 48px;"></i>
-            <p>Buffer Cleared</p>
-        </div>
-    `;
-    if (window.lucide) lucide.createIcons();
+logoutBtn.onclick = async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
 };
 
-document.getElementById('max-logs-select').onchange = (e) => {
-    state.maxLogs = parseInt(e.target.value);
-    if (state.currentDomain) {
-        // Refresh to apply limit or fetch more
-        ui.logsContainer.innerHTML = '';
-        socket.emit('fetch_history', state.currentDomain);
+maxLogsSelect.onchange = (e) => {
+    maxLogs = parseInt(e.target.value);
+
+    // If we have a current domain, clear and re-fetch to ensure we have enough logs
+    // or to trim if we decreased the limit.
+    if (currentDomain) {
+        logsContainer.innerHTML = '';
+        socket.emit('fetch_history', currentDomain);
     }
 };
 
-document.getElementById('logout-btn').onclick = async () => {
-    try {
-        await fetch('/api/logout', { method: 'POST' });
-        window.location.href = '/login';
-    } catch (e) { console.error('Logout failed', e); }
+closeModalBtn.onclick = () => {
+    modal.classList.remove('show');
 };
 
-// --- Mobile Menu ---
+window.onclick = (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('show');
+    }
+};
 
-function toggleMobileMenu() {
-    state.isMobileMenuOpen = !state.isMobileMenuOpen;
-    ui.sidebar.classList.toggle('active', state.isMobileMenuOpen);
-}
-
-ui.menuToggle.onclick = toggleMobileMenu;
-ui.menuClose.onclick = toggleMobileMenu;
-
-// Auth Error Check
+// Auth Error Handling
 socket.on('connect_error', (err) => {
-    if (err.message === 'Unauthorized') window.location.href = '/login';
+    if (err.message === 'Unauthorized') {
+        window.location.href = '/login';
+    }
 });

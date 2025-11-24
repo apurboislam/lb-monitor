@@ -4,180 +4,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VPS Overwatch</title>
-
-    <!-- Fonts: Inter for UI, JetBrains Mono for Code/Logs -->
+    <title>Dashboard - VPS Monitor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap"
         rel="stylesheet">
-
-    <!-- Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
-
-    <div class="app-container">
-
-        <!-- Mobile Header (Visible only on small screens) -->
-        <header class="mobile-header">
-            <div class="logo">
-                <i data-lucide="activity"></i>
-                <span>Overwatch</span>
-            </div>
-            <button id="menu-toggle" class="icon-btn">
-                <i data-lucide="menu"></i>
-            </button>
-        </header>
-
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i data-lucide="server"></i>
-                    <span>VPS Overwatch</span>
-                </div>
-                <button id="menu-close" class="icon-btn mobile-only">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-
-            <div class="nav-section-title">DOMAINS</div>
-            <div id="domain-list" class="domain-list">
-                <!-- Domains injected via JS -->
-                <div class="empty-state-small">Waiting for signals...</div>
-            </div>
-
-            <div class="sidebar-footer">
-                <button id="logout-btn" class="logout-btn">
-                    <i data-lucide="log-out"></i>
-                    <span>Disconnect</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Workspace -->
-        <main class="main-content">
-
-            <!-- Dashboard Header / Stats Grid -->
-            <div class="dashboard-grid">
-                <!-- CPU Card -->
-                <div class="stat-card">
-                    <div class="stat-icon cpu"><i data-lucide="cpu"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">CPU Load</span>
-                        <h3 class="stat-value" id="cpu-val">0%</h3>
-                    </div>
-                    <div class="progress-track">
-                        <div id="cpu-bar" class="progress-fill" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Memory Card -->
-                <div class="stat-card">
-                    <div class="stat-icon mem"><i data-lucide="memory-stick"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Memory</span>
-                        <h3 class="stat-value" id="mem-val">0%</h3>
-                    </div>
-                    <div class="progress-track">
-                        <div id="mem-bar" class="progress-fill" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Network Speed Card -->
-                <div class="stat-card">
-                    <div class="stat-icon net"><i data-lucide="network"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Live Throughput</span>
-                        <div class="dual-value">
-                            <span class="down"><i data-lucide="arrow-down"></i> <span id="net-down">0 KB/s</span></span>
-                            <span class="up"><i data-lucide="arrow-up"></i> <span id="net-up">0 KB/s</span></span>
-                        </div>
-                    </div>
-                    <!-- Mini sparkline or visual indicator could go here -->
-                </div>
-
-                <!-- Bandwidth Card -->
-                <div class="stat-card">
-                    <div class="stat-icon disk"><i data-lucide="hard-drive"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-label">Total Bandwidth</span>
-                        <h3 class="stat-value" id="bw-today-val">0 MB</h3>
-                        <span class="sub-stat">Month: <span id="bw-month-val">0 GB</span></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Log Viewer Section -->
-            <section class="logs-wrapper">
-                <div class="logs-header">
-                    <div class="logs-title">
-                        <h2 id="current-domain">Select Domain</h2>
-                        <span class="live-indicator"><span class="pulse"></span>Live</span>
-                    </div>
-
-                    <div class="logs-actions">
-                        <div class="select-wrapper">
-                            <select id="max-logs-select">
-                                <option value="25">25 lines</option>
-                                <option value="50" selected>50 lines</option>
-                                <option value="100">100 lines</option>
-                                <option value="500">500 lines</option>
-                            </select>
-                        </div>
-                        <button id="clear-logs" class="action-btn" title="Clear Buffer">
-                            <i data-lucide="trash-2"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Log Headers (Desktop) -->
-                <div class="log-table-header">
-                    <div class="col-time">Time</div>
-                    <div class="col-method">Method</div>
-                    <div class="col-status">Status</div>
-                    <div class="col-path">Path / URI</div>
-                    <div class="col-action"></div>
-                </div>
-
-                <!-- Log Feed -->
-                <div id="logs-container" class="logs-feed custom-scroll">
-                    <!-- Empty State -->
-                    <div class="empty-feed">
-                        <i data-lucide="activity" style="opacity: 0.2; width: 48px; height: 48px;"></i>
-                        <p>No traffic detected yet</p>
-                    </div>
-                </div>
-            </section>
-
-        </main>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="app-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                    d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
+            </svg>
+            VPS Monitor
+        </div>
+        <div id="domain-list" class="domain-list">
+            <!-- Domains injected here -->
+        </div>
+        <button id="logout-btn" class="logout-btn">Logout</button>
     </div>
 
-    <!-- Detail Modal -->
-    <div id="log-modal" class="modal-overlay">
-        <div class="modal-window">
-            <div class="modal-header">
-                <h3>Request Details</h3>
-                <button id="close-modal" class="icon-btn"><i data-lucide="x"></i></button>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-header">
+                    <span>CPU Load</span>
+                    <span id="cpu-val">0%</span>
+                </div>
+                <div class="progress-bg">
+                    <div id="cpu-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
             </div>
-            <div class="modal-content custom-scroll" id="modal-body">
-                <!-- Injected via JS -->
+            <div class="stat-item">
+                <div class="stat-header">
+                    <span>Memory</span>
+                    <span id="mem-val">0%</span>
+                </div>
+                <div class="progress-bg">
+                    <div id="mem-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-header">
+                    <span>Disk</span>
+                    <span id="disk-val">0%</span>
+                </div>
+                <div class="progress-bg">
+                    <div id="disk-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-header">
+                    <span>Net Speed (↓/↑)</span>
+                    <span id="net-speed-val">0 / 0 KB/s</span>
+                </div>
+                <div class="progress-bg" style="background: transparent;"></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-header">
+                    <span>Bandwidth (Today)</span>
+                    <span id="bw-today-val">0 MB</span>
+                </div>
+                <div class="stat-header" style="margin-top: 0.2rem; font-size: 0.7rem; opacity: 0.7;">
+                    <span>Month: <span id="bw-month-val">0 GB</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Viewer -->
+        <div class="log-viewer">
+            <div class="log-header">
+                <div id="current-domain" class="current-domain">Select a Domain</div>
+                <div class="header-controls">
+                    <select id="max-logs-select" class="max-logs-select">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                    </select>
+                    <button id="clear-logs" class="clear-btn">Clear Logs</button>
+                </div>
+            </div>
+            <div id="logs-container" class="logs-container">
+                <!-- Logs injected here -->
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Details Modal -->
+    <div id="log-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Log Details</h3>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div id="modal-body" class="modal-body">
+                <!-- Details injected here -->
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/app.js"></script>
-    <script>
-        // Initialize Lucide Icons
-        lucide.createIcons();
-    </script>
 </body>
 
 </html>
