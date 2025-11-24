@@ -1,661 +1,359 @@
 const socket = io();
 
-// State
-let currentDomain = null;
-const domains = new Set();
-let maxLogs = 50;
-let logModal = null;
-let toastInstance = null;
-
-// Elements
-const cpuVal = document.getElementById('cpu-val');
-const cpuBar = document.getElementById('cpu-bar');
-const memVal = document.getElementById('mem-val');
-const memBar = document.getElementById('mem-bar');
-const diskVal = document.getElementById('disk-val');
-const diskBar = document.getElementById('disk-bar');
-const netSpeedDown = document.getElementById('net-speed-down');
-const netSpeedUp = document.getElementById('net-speed-up');
-const bwTodayVal = document.getElementById('bw-today-val');
-const bwMonthVal = document.getElementById('bw-month-val');
-const domainListEl = document.getElementById('domain-list');
-const domainCountEl = document.getElementById('domain-count');
-const logsContainer = document.getElementById('logs-container');
-const currentDomainEl = document.getElementById('current-domain');
-const clearLogsBtn = document.getElementById('clear-logs');
-const logoutBtn = document.getElementById('logout-btn');
-const maxLogsSelect = document.getElementById('max-logs-select');
-const modalBody = document.getElementById('modal-body');
-
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    const modalEl = document.getElementById('log-modal');
-    if (modalEl) {
-        logModal = new bootstrap.Modal(modalEl);
+    // --- Elements ---
+    const logoutBtn = document.getElementById('logout-btn');
+    const pageTitle = document.getElementById('page-title');
+    const domainCountEl = document.getElementById('domain-count');
+    const domainListEl = document.getElementById('domain-list');
+    const currentDomainBadge = document.getElementById('current-domain-badge');
+
+    // Stats Elements
+    const cpuVal = document.getElementById('cpu-val');
+    const cpuBar = document.getElementById('cpu-bar');
+    const ramVal = document.getElementById('ram-val');
+    const ramBar = document.getElementById('ram-bar');
+    const diskVal = document.getElementById('disk-val');
+    const diskBar = document.getElementById('disk-bar');
+    const uptimeVal = document.getElementById('uptime-val');
+
+    // Network Elements
+    const netDown = document.getElementById('net-down');
+    const netUp = document.getElementById('net-up');
+    const bwToday = document.getElementById('bw-today');
+    const bwMonth = document.getElementById('bw-month');
+
+    // Logs Elements
+    const logsTableBody = document.getElementById('logs-table-body');
+    const rowsSelect = document.getElementById('rows-select');
+    const clearLogsBtn = document.getElementById('clear-logs');
+    const emptyState = document.getElementById('empty-state');
+    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const modalContent = document.getElementById('modal-content');
+
+    // --- State ---
+    let chartInstance = null;
+    let maxRows = 50;
+    let currentDomain = null;
+    const domains = new Set();
+
+    // --- Initialization ---
+    initChart();
+
+    // --- Socket.IO Events ---
+
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+
+    socket.on('connect_error', (err) => {
+        if (err.message === 'Unauthorized') {
+            window.location.href = '/login';
+        }
+    });
+
+    // System Stats
+    socket.on('stats', (stats) => {
+        updateStats(stats);
+        updateChart(stats);
+    });
+
+    // Domain Discovery
+    socket.on('new_domain', (domain) => {
+        if (!domains.has(domain)) {
+            domains.add(domain);
+            renderSidebar();
+        }
+    });
+
+    // Logs
+    socket.on('log', (data) => {
+        const { domain, entry } = data;
+        // If viewing specific domain, only show that domain's logs
+        // If viewing all (currentDomain is null), show all? 
+        // Logic: If currentDomain is set, filter. If not, maybe show all or nothing?
+        // Let's assume default is "Select a Domain" or show all if we want.
+        // For now, let's match the previous logic: if currentDomain matches, append.
+
+        if (currentDomain && domain === currentDomain) {
+            appendLog(entry, domain);
+        }
+    });
+
+    socket.on('log_all', (data) => {
+        // This event might be useful if we want a "Global" view
+        const { domain } = data;
+        if (!domains.has(domain)) {
+            domains.add(domain);
+            renderSidebar();
+        }
+    });
+
+    // --- UI Functions ---
+
+    function updateStats(stats) {
+        // CPU
+        cpuVal.textContent = `${stats.cpu}%`;
+        cpuBar.style.width = `${stats.cpu}%`;
+
+        // RAM
+        ramVal.textContent = `${stats.mem.percentage}%`;
+        ramBar.style.width = `${stats.mem.percentage}%`;
+
+        // Disk (First one)
+        if (stats.disk && stats.disk.length > 0) {
+            const root = stats.disk[0];
+            diskVal.textContent = `${root.percentage}%`;
+            diskBar.style.width = `${root.percentage}%`;
+        }
+
+        // Network
+        if (stats.network) {
+            netDown.textContent = formatSpeed(stats.network.speed.rx);
+            netUp.textContent = formatSpeed(stats.network.speed.tx);
+
+            bwToday.textContent = formatBytes(stats.network.bandwidth.today.total);
+            bwMonth.textContent = formatBytes(stats.network.bandwidth.month.total);
+        }
+
+        // Uptime (Not sent by backend currently, let's calculate client-side or ignore if not available)
+        // If backend doesn't send uptime, we can't show it accurately.
+        // For now, placeholder or maybe backend sends it? Backend code didn't show uptime in stats.
+        // We'll leave it as is or maybe add it to backend later.
     }
 
-    const toastEl = document.getElementById('toast-notification');
-    if (toastEl) {
-        toastInstance = new bootstrap.Toast(toastEl, {
-            animation: true,
-            autohide: true,
-            delay: 3000
+    function initChart() {
+        const ctx = document.getElementById('liveChart').getContext('2d');
+
+        const gradientCpu = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientCpu.addColorStop(0, 'rgba(13, 202, 240, 0.5)');
+        gradientCpu.addColorStop(1, 'rgba(13, 202, 240, 0.0)');
+
+        const gradientRam = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientRam.addColorStop(0, 'rgba(255, 193, 7, 0.5)');
+        gradientRam.addColorStop(1, 'rgba(255, 193, 7, 0.0)');
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [
+                    {
+                        label: 'CPU',
+                        data: Array(20).fill(0),
+                        borderColor: '#0dcaf0',
+                        backgroundColor: gradientCpu,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'RAM',
+                        data: Array(20).fill(0),
+                        borderColor: '#ffc107',
+                        backgroundColor: gradientRam,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#c9d1d9' } } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#8b949e' }
+                    },
+                    x: { display: false }
+                },
+                animation: { duration: 0 }
+            }
         });
     }
 
-    // Hide empty state initially
-    hideEmptyState();
-});
+    function updateChart(stats) {
+        if (!chartInstance) return;
 
-// Toast Notification Helper
-function showToast(message, type = 'info') {
-    const toastEl = document.getElementById('toast-notification');
-    const toastMessage = document.getElementById('toast-message');
-    const toastIcon = document.getElementById('toast-icon');
-    
-    if (!toastEl || !toastMessage || !toastIcon) return;
+        const dataCpu = chartInstance.data.datasets[0].data;
+        const dataRam = chartInstance.data.datasets[1].data;
 
-    // Set message
-    toastMessage.textContent = message;
+        dataCpu.shift();
+        dataRam.shift();
 
-    // Set icon and class based on type
-    toastEl.className = 'toast align-items-center border-0 toast-' + type;
-    
-    const icons = {
-        success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>',
-        error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
-        info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
-    };
-    
-    toastIcon.innerHTML = icons[type] || icons.info;
+        dataCpu.push(stats.cpu);
+        dataRam.push(stats.mem.percentage);
 
-    if (toastInstance) {
-        toastInstance.show();
+        chartInstance.update();
     }
-}
 
-// Helper to format bytes
-function formatBytes(bytes, decimals = 2) {
-    if (!+bytes) return '0 B';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-}
+    function renderSidebar() {
+        domainCountEl.textContent = domains.size;
 
-// Helper to format speed
-function formatSpeed(bytesPerSec) {
-    return formatBytes(bytesPerSec) + '/s';
-}
-
-// Animate number change
-function animateValue(element, start, end, duration = 500) {
-    if (!element) return;
-    
-    const range = end - start;
-    const increment = range / (duration / 16);
-    let current = start;
-    
-    const timer = setInterval(() => {
-        current += increment;
-        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
-            element.textContent = Math.round(end) + '%';
-            clearInterval(timer);
-        } else {
-            element.textContent = Math.round(current) + '%';
+        if (domains.size === 0) {
+            domainListEl.innerHTML = '<li class="nav-item text-center text-secondary small mt-3">No domains found</li>';
+            return;
         }
-    }, 16);
-}
 
-// Update progress bar with animation
-function updateProgressBar(bar, value) {
-    if (!bar) return;
-    
-    bar.style.width = value + '%';
-    
-    // Change color based on value
-    if (value >= 90) {
-        bar.classList.add('bg-danger');
-        bar.classList.remove('bg-warning', 'bg-success');
-    } else if (value >= 75) {
-        bar.classList.add('bg-warning');
-        bar.classList.remove('bg-danger', 'bg-success');
-    } else {
-        bar.classList.remove('bg-danger', 'bg-warning');
+        domainListEl.innerHTML = Array.from(domains).map(d => `
+            <li class="nav-item">
+                <a href="#" class="nav-link ${d === currentDomain ? 'active' : ''}" data-domain="${d}">
+                    <i class="fa-solid fa-globe me-2"></i> ${d}
+                </a>
+            </li>
+        `).join('');
+
+        // Add click listeners
+        domainListEl.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const domain = link.getAttribute('data-domain');
+                switchDomain(domain);
+            });
+        });
     }
-}
 
-// System Stats
-socket.on('stats', (stats) => {
-    // CPU
-    if (cpuVal && cpuBar) {
-        const currentCpu = parseFloat(cpuVal.textContent) || 0;
-        if (Math.abs(currentCpu - stats.cpu) > 0.5) {
-            cpuVal.textContent = `${stats.cpu}%`;
+    function switchDomain(domain) {
+        if (currentDomain) {
+            socket.emit('leave_room', `logs:${currentDomain}`);
         }
-        updateProgressBar(cpuBar, stats.cpu);
+
+        currentDomain = domain;
+        currentDomainBadge.textContent = domain;
+        pageTitle.textContent = `Logs: ${domain}`;
+
+        // Update active state in sidebar
+        renderSidebar();
+
+        // Clear logs
+        logsTableBody.innerHTML = '';
+        checkEmptyState();
+
+        // Join new room and fetch history
+        socket.emit('join_room', `logs:${domain}`);
+        socket.emit('fetch_history', domain);
+
+        // Close mobile sidebar
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const bsOffcanvas = bootstrap.Collapse.getInstance(sidebarMenu);
+        if (bsOffcanvas) bsOffcanvas.hide();
     }
 
-    // Memory
-    if (memVal && memBar) {
-        const currentMem = parseFloat(memVal.textContent) || 0;
-        if (Math.abs(currentMem - stats.mem.percentage) > 0.5) {
-            memVal.textContent = `${stats.mem.percentage}%`;
-        }
-        updateProgressBar(memBar, stats.mem.percentage);
-    }
+    function appendLog(entry, domain) {
+        const time = new Date(entry.ts * 1000).toLocaleTimeString();
+        const method = entry.request?.method || '-';
+        const status = entry.status || '-';
+        const path = entry.request?.uri || '-';
 
-    // Disk
-    if (stats.disk && stats.disk.length > 0) {
-        const rootDisk = stats.disk[0];
-        if (diskVal && diskBar) {
-            const currentDisk = parseFloat(diskVal.textContent) || 0;
-            if (Math.abs(currentDisk - rootDisk.percentage) > 0.5) {
-                diskVal.textContent = `${rootDisk.percentage}%`;
-            }
-            updateProgressBar(diskBar, rootDisk.percentage);
-        }
-    }
+        const row = document.createElement('tr');
+        row.className = 'log-row-enter';
 
-    // Network Stats
-    if (stats.network) {
-        const rx = formatSpeed(stats.network.speed.rx);
-        const tx = formatSpeed(stats.network.speed.tx);
+        let statusClass = 'text-light';
+        if (status >= 200 && status < 300) statusClass = 'text-status-2xx';
+        else if (status >= 300 && status < 400) statusClass = 'text-status-3xx';
+        else if (status >= 400 && status < 500) statusClass = 'text-status-4xx';
+        else if (status >= 500) statusClass = 'text-status-5xx';
 
-        if (netSpeedDown) netSpeedDown.textContent = rx;
-        if (netSpeedUp) netSpeedUp.textContent = tx;
-
-        const todayTotal = formatBytes(stats.network.bandwidth.today.total);
-        if (bwTodayVal) bwTodayVal.textContent = todayTotal;
-
-        const monthTotal = formatBytes(stats.network.bandwidth.month.total);
-        if (bwMonthVal) bwMonthVal.textContent = monthTotal;
-    }
-});
-
-// Log Handling
-socket.on('new_domain', (domain) => {
-    if (!domains.has(domain)) {
-        domains.add(domain);
-        renderDomainList();
-        showToast(`New domain detected: ${domain}`, 'info');
-    }
-});
-
-socket.on('log_all', (data) => {
-    const { domain } = data;
-    if (!domains.has(domain)) {
-        domains.add(domain);
-        renderDomainList();
-    }
-});
-
-socket.on('log', (data) => {
-    const { domain, entry } = data;
-    if (domain === currentDomain) {
-        appendLog(entry);
-    }
-});
-
-// Empty State Management
-function showEmptyState() {
-    const emptyState = logsContainer.querySelector('.empty-state');
-    if (emptyState) {
-        emptyState.style.display = 'flex';
-    }
-}
-
-function hideEmptyState() {
-    const emptyState = logsContainer.querySelector('.empty-state');
-    if (emptyState) {
-        emptyState.style.display = 'none';
-    }
-}
-
-// UI Functions
-function renderDomainList() {
-    // Hide skeleton
-    const skeleton = document.querySelector('.domain-skeleton');
-    if (skeleton) skeleton.style.display = 'none';
-
-    domainListEl.innerHTML = '';
-    
-    if (domains.size === 0) {
-        domainListEl.innerHTML = '<p class="text-secondary text-center small px-3 py-4 mb-0">No domains yet</p>';
-        if (domainCountEl) domainCountEl.textContent = '0';
-        return;
-    }
-
-    if (domainCountEl) domainCountEl.textContent = domains.size;
-
-    domains.forEach(domain => {
-        const button = document.createElement('button');
-        button.className = `list-group-item list-group-item-action domain-item bg-transparent border-0 ${domain === currentDomain ? 'active' : ''}`;
-        button.textContent = domain;
-        button.onclick = () => switchDomain(domain);
-        
-        // Add animation delay for staggered effect
-        button.style.animation = 'fadeIn 0.3s ease-out';
-        
-        domainListEl.appendChild(button);
-    });
-}
-
-function switchDomain(domain) {
-    if (currentDomain) {
-        socket.emit('leave_room', `logs:${currentDomain}`);
-    }
-
-    currentDomain = domain;
-    currentDomainEl.textContent = domain;
-    logsContainer.innerHTML = ''; // Clear logs on switch
-    
-    // Show loading skeleton
-    logsContainer.innerHTML = `
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-        <div class="skeleton-item"></div>
-    `;
-    
-    renderDomainList(); // Update active state
-
-    // Close mobile sidebar if open
-    const sidebarMenu = document.getElementById('sidebarMenu');
-    const bsOffcanvas = bootstrap.Offcanvas.getInstance(sidebarMenu);
-    if (bsOffcanvas) {
-        bsOffcanvas.hide();
-    }
-
-    socket.emit('join_room', `logs:${domain}`);
-    socket.emit('fetch_history', domain);
-    
-    showToast(`Switched to ${domain}`, 'success');
-    
-    // Clear skeleton after a short delay
-    setTimeout(() => {
-        const skeletons = logsContainer.querySelectorAll('.skeleton-item');
-        skeletons.forEach(s => s.remove());
-    }, 500);
-}
-
-function appendLog(entry) {
-    hideEmptyState();
-    
-    const div = document.createElement('div');
-
-    const status = entry.status || '-';
-    let statusClass = '';
-    if (status >= 500) statusClass = 'status-5xx';
-    else if (status >= 400) statusClass = 'status-4xx';
-    else if (status >= 200) statusClass = 'status-2xx';
-
-    const ts = new Date(entry.ts * 1000).toLocaleTimeString();
-    const method = entry.request?.method || '-';
-    const uri = entry.request?.uri || '-';
-
-    div.className = `log-card ${statusClass}`;
-
-    // Status badge color
-    let statusBadgeClass = 'bg-secondary';
-    if (status >= 500) statusBadgeClass = 'bg-danger';
-    else if (status >= 400) statusBadgeClass = 'bg-warning';
-    else if (status >= 200) statusBadgeClass = 'bg-success';
-
-    div.innerHTML = `
-        <div class="text-secondary font-monospace small" style="min-width: 85px;">${ts}</div>
-        <div class="method-badge method-${method}">${method}</div>
-        <div class="log-uri text-truncate flex-grow-1" title="${uri}">${uri}</div>
-        <div class="badge ${statusBadgeClass} font-monospace px-2 py-1">${status}</div>
-        <button class="btn btn-sm btn-link text-secondary p-0 view-btn" aria-label="View details">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-        </button>
-    `;
-
-    // Add click handler for view button
-    const viewBtn = div.querySelector('.view-btn');
-    viewBtn.onclick = (e) => {
-        e.stopPropagation();
-        openModal(entry);
-    };
-
-    // Make the whole card clickable
-    div.onclick = () => openModal(entry);
-
-    logsContainer.insertBefore(div, logsContainer.firstChild);
-
-    // Enforce max logs limit
-    while (logsContainer.children.length > maxLogs) {
-        const lastChild = logsContainer.lastChild;
-        if (lastChild && !lastChild.classList.contains('empty-state')) {
-            logsContainer.removeChild(lastChild);
-        } else {
-            break;
-        }
-    }
-    
-    // Show empty state if no logs
-    if (logsContainer.children.length === 0 || (logsContainer.children.length === 1 && logsContainer.querySelector('.empty-state'))) {
-        showEmptyState();
-    }
-}
-
-function openModal(entry) {
-    const ts = new Date(entry.ts * 1000).toLocaleString();
-    const duration = entry.duration ? (entry.duration * 1000).toFixed(2) + ' ms' : '0 ms';
-
-    const rows = [
-        ['Timestamp', ts],
-        ['Method', entry.request?.method || '-'],
-        ['URI', entry.request?.uri || '-'],
-        ['Status', entry.status || '-'],
-        ['Duration', duration],
-        ['Remote IP', entry.request?.remote_ip || '-'],
-        ['Real User IP', entry.request?.headers?.['X-Forwarded-For']?.[0] || entry.request?.client_ip || '-'],
-        ['Ray ID', entry.request?.headers?.['Cf-Ray']?.[0] || entry.request?.headers?.['cf-ray']?.[0] || '-'],
-        ['User Agent', entry.request?.headers?.['User-Agent']?.[0] || '-'],
-        ['Referer', entry.request?.headers?.['Referer']?.[0] || '-'],
-        ['Host', entry.request?.host || '-']
-    ];
-
-    modalBody.innerHTML = rows.map(([label, value]) => `
-        <div class="modal-row">
-            <div class="modal-label">${label}</div>
-            <div class="modal-value">${value}</div>
-        </div>
-    `).join('');
-
-    if (logModal) {
-        logModal.show();
-    }
-}
-
-// Event Listeners
-clearLogsBtn.onclick = () => {
-    const logCards = logsContainer.querySelectorAll('.log-card');
-    
-    if (logCards.length === 0) {
-        showToast('No logs to clear', 'info');
-        return;
-    }
-
-    // Animate removal
-    logCards.forEach((card, index) => {
-        setTimeout(() => {
-            card.style.animation = 'slideInRight 0.2s ease-out reverse';
-            setTimeout(() => card.remove(), 200);
-        }, index * 30);
-    });
-
-    setTimeout(() => {
-        logsContainer.innerHTML = '<div class="empty-state"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><p class="empty-state-text">No logs yet</p><p class="empty-state-subtext">Logs will appear here as requests come in</p></div>';
-        showEmptyState();
-    }, logCards.length * 30 + 200);
-
-    showToast('Logs cleared', 'success');
-};
-
-logoutBtn.onclick = async () => {
-    logoutBtn.disabled = true;
-    logoutBtn.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        Logging out...
-    `;
-    
-    try {
-        await fetch('/api/logout', { method: 'POST' });
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 500);
-    } catch (err) {
-        console.error(err);
-        showToast('Error logging out', 'error');
-        logoutBtn.disabled = false;
-        logoutBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            Logout
+        row.innerHTML = `
+            <td class="ps-4 font-monospace text-secondary small">${time}</td>
+            <td><span class="badge badge-method-${method}">${method}</span></td>
+            <td><span class="fw-bold ${statusClass}">${status}</span></td>
+            <td class="text-truncate" style="max-width: 200px;" title="${path}">${path}</td>
+            <td class="text-end pe-4">
+                <button class="btn btn-sm btn-outline-secondary border-0 text-light view-details-btn">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </td>
         `;
+
+        row.addEventListener('click', () => showLogDetails(entry));
+
+        logsTableBody.prepend(row);
+
+        // Limit rows
+        while (logsTableBody.children.length > maxRows) {
+            logsTableBody.removeChild(logsTableBody.lastChild);
+        }
+
+        checkEmptyState();
     }
-};
 
-maxLogsSelect.onchange = (e) => {
-    maxLogs = parseInt(e.target.value);
-    showToast(`Display limit: ${maxLogs} logs`, 'info');
-    
-    if (currentDomain) {
-        logsContainer.innerHTML = '';
-        showEmptyState();
-        socket.emit('fetch_history', currentDomain);
+    function showLogDetails(entry) {
+        const ts = new Date(entry.ts * 1000).toLocaleString();
+        const duration = entry.duration ? (entry.duration * 1000).toFixed(2) + ' ms' : '0 ms';
+
+        const details = [
+            { label: 'Timestamp', value: ts },
+            { label: 'Method', value: entry.request?.method || '-' },
+            { label: 'URI', value: entry.request?.uri || '-' },
+            { label: 'Status', value: entry.status || '-' },
+            { label: 'Duration', value: duration },
+            { label: 'Remote IP', value: entry.request?.remote_ip || '-' },
+            { label: 'Real User IP', value: entry.request?.headers?.['X-Forwarded-For']?.[0] || entry.request?.client_ip || '-' },
+            { label: 'Ray ID', value: entry.request?.headers?.['Cf-Ray']?.[0] || entry.request?.headers?.['cf-ray']?.[0] || '-' },
+            { label: 'User Agent', value: entry.request?.headers?.['User-Agent']?.[0] || '-' },
+            { label: 'Referer', value: entry.request?.headers?.['Referer']?.[0] || '-' },
+            { label: 'Host', value: entry.request?.host || '-' }
+        ];
+
+        modalContent.innerHTML = details.map(item => `
+            <div class="col-md-6">
+                <div class="modal-label">${item.label}</div>
+                <div class="modal-value">${item.value}</div>
+            </div>
+        `).join('');
+
+        detailsModal.show();
     }
-};
 
-// Connection Status
-socket.on('connect', () => {
-    console.log('Connected to server');
-    showToast('Connected to monitoring server', 'success');
-});
-
-socket.on('disconnect', () => {
-    console.log('Disconnected from server');
-    showToast('Disconnected from server', 'error');
-});
-
-socket.on('connect_error', (err) => {
-    console.error('Connection error:', err);
-    if (err.message === 'Unauthorized') {
-        showToast('Session expired. Redirecting to login...', 'error');
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 2000);
-    } else {
-        showToast('Connection error. Retrying...', 'error');
+    function checkEmptyState() {
+        if (logsTableBody.children.length === 0) {
+            emptyState.classList.remove('d-none');
+        } else {
+            emptyState.classList.add('d-none');
+        }
     }
-});
 
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + K to focus search
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    // --- Helpers ---
+    function formatBytes(bytes, decimals = 2) {
+        if (!+bytes) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    }
+
+    function formatSpeed(bytesPerSec) {
+        return formatBytes(bytesPerSec) + '/s';
+    }
+
+    // --- Event Listeners ---
+    logoutBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        maxLogsSelect.focus();
-    }
-    
-    // Escape to close modal
-    if (e.key === 'Escape' && logModal) {
-        logModal.hide();
-    }
-});
-
-// System Stats
-socket.on('stats', (stats) => {
-    cpuVal.textContent = `${stats.cpu}%`;
-    cpuBar.style.width = `${stats.cpu}%`;
-
-    memVal.textContent = `${stats.mem.percentage}%`;
-    memBar.style.width = `${stats.mem.percentage}%`;
-
-    // Use the first disk (usually root)
-    if (stats.disk && stats.disk.length > 0) {
-        const rootDisk = stats.disk[0];
-        diskVal.textContent = `${rootDisk.percentage}%`;
-        diskBar.style.width = `${rootDisk.percentage}%`;
-    }
-
-    // Network Stats
-    if (stats.network) {
-        const rx = formatSpeed(stats.network.speed.rx);
-        const tx = formatSpeed(stats.network.speed.tx);
-
-        if (netSpeedDown) netSpeedDown.textContent = rx;
-        if (netSpeedUp) netSpeedUp.textContent = tx;
-
-        const todayTotal = formatBytes(stats.network.bandwidth.today.total);
-        bwTodayVal.textContent = todayTotal;
-
-        const monthTotal = formatBytes(stats.network.bandwidth.month.total);
-        bwMonthVal.textContent = monthTotal;
-    }
-});
-
-// Log Handling
-socket.on('new_domain', (domain) => {
-    if (!domains.has(domain)) {
-        domains.add(domain);
-        renderDomainList();
-    }
-});
-
-socket.on('log_all', (data) => {
-    const { domain } = data;
-    if (!domains.has(domain)) {
-        domains.add(domain);
-        renderDomainList();
-    }
-});
-
-socket.on('log', (data) => {
-    const { domain, entry } = data;
-    if (domain === currentDomain) {
-        appendLog(entry);
-    }
-});
-
-// UI Functions
-function renderDomainList() {
-    domainListEl.innerHTML = '';
-    domains.forEach(domain => {
-        const button = document.createElement('button');
-        button.className = `list-group-item list-group-item-action domain-item bg-transparent border-0 ${domain === currentDomain ? 'active' : ''}`;
-        button.textContent = domain;
-        button.onclick = () => switchDomain(domain);
-        domainListEl.appendChild(button);
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/login';
+        } catch (err) {
+            console.error('Logout failed', err);
+        }
     });
-}
 
-function switchDomain(domain) {
-    if (currentDomain) {
-        socket.emit('leave_room', `logs:${currentDomain}`);
-    }
+    rowsSelect.addEventListener('change', (e) => {
+        maxRows = parseInt(e.target.value);
+        while (logsTableBody.children.length > maxRows) {
+            logsTableBody.removeChild(logsTableBody.lastChild);
+        }
+    });
 
-    currentDomain = domain;
-    currentDomainEl.textContent = domain;
-    logsContainer.innerHTML = ''; // Clear logs on switch
-    renderDomainList(); // Update active state
-
-    // Close mobile sidebar if open
-    const sidebarMenu = document.getElementById('sidebarMenu');
-    const bsOffcanvas = bootstrap.Offcanvas.getInstance(sidebarMenu);
-    if (bsOffcanvas) {
-        bsOffcanvas.hide();
-    }
-
-    socket.emit('join_room', `logs:${domain}`);
-    socket.emit('fetch_history', domain);
-}
-
-function appendLog(entry) {
-    const div = document.createElement('div');
-
-    const status = entry.status || '-';
-    let statusClass = '';
-    if (status >= 500) statusClass = 'status-5xx';
-    else if (status >= 400) statusClass = 'status-4xx';
-    else if (status >= 200) statusClass = 'status-2xx';
-
-    const ts = new Date(entry.ts * 1000).toLocaleTimeString();
-    const method = entry.request?.method || '-';
-    const uri = entry.request?.uri || '-';
-
-    div.className = `log-card d-flex align-items-center gap-3 ${statusClass}`;
-
-    div.innerHTML = `
-        <div class="text-secondary font-monospace small" style="min-width: 80px;">${ts}</div>
-        <div class="method-badge method-${method}">${method}</div>
-        <div class="log-uri text-truncate flex-grow-1" title="${uri}">${uri}</div>
-        <div class="badge bg-dark border border-secondary text-light font-monospace">${status}</div>
-        <button class="btn btn-sm btn-link text-secondary p-0 view-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-    `;
-
-    // Add click handler for view button
-    const viewBtn = div.querySelector('.view-btn');
-    viewBtn.onclick = (e) => {
-        e.stopPropagation();
-        openModal(entry);
-    };
-
-    // Also make the whole card clickable for easier mobile use
-    div.onclick = () => openModal(entry);
-    div.style.cursor = 'pointer';
-
-    logsContainer.insertBefore(div, logsContainer.firstChild);
-
-    // Enforce max logs limit
-    while (logsContainer.children.length > maxLogs) {
-        logsContainer.removeChild(logsContainer.lastChild);
-    }
-}
-
-function openModal(entry) {
-    const ts = new Date(entry.ts * 1000).toLocaleString();
-    const duration = entry.duration ? (entry.duration * 1000).toFixed(2) + 'ms' : '0ms';
-
-    const rows = [
-        ['Timestamp', ts],
-        ['Method', entry.request?.method || '-'],
-        ['URI', entry.request?.uri || '-'],
-        ['Status', entry.status || '-'],
-        ['Duration', duration],
-        ['Remote IP', entry.request?.remote_ip || '-'],
-        ['Real User IP', entry.request?.headers?.['X-Forwarded-For']?.[0] || entry.request?.client_ip || '-'],
-        ['Ray ID', entry.request?.headers?.['Cf-Ray']?.[0] || entry.request?.headers?.['cf-ray']?.[0] || '-'],
-        ['User Agent', entry.request?.headers?.['User-Agent']?.[0] || '-'],
-        ['Referer', entry.request?.headers?.['Referer']?.[0] || '-'],
-        ['Host', entry.request?.host || '-']
-    ];
-
-    modalBody.innerHTML = rows.map(([label, value]) => `
-        <div class="modal-row">
-            <div class="modal-label">${label}</div>
-            <div class="modal-value">${value}</div>
-        </div>
-    `).join('');
-
-    if (logModal) {
-        logModal.show();
-    }
-}
-
-// Event Listeners
-clearLogsBtn.onclick = () => {
-    logsContainer.innerHTML = '';
-};
-
-logoutBtn.onclick = async () => {
-    await fetch('/api/logout', { method: 'POST' });
-    window.location.href = '/login';
-};
-
-maxLogsSelect.onchange = (e) => {
-    maxLogs = parseInt(e.target.value);
-    if (currentDomain) {
-        logsContainer.innerHTML = '';
-        socket.emit('fetch_history', currentDomain);
-    }
-};
-
-// Auth Error Handling
-socket.on('connect_error', (err) => {
-    if (err.message === 'Unauthorized') {
-        window.location.href = '/login';
-    }
+    clearLogsBtn.addEventListener('click', () => {
+        logsTableBody.innerHTML = '';
+        checkEmptyState();
+    });
 });

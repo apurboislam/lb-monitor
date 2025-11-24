@@ -4,556 +4,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - VPS Monitor</title>
+    <title>VPS Monitor Dashboard</title>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="/css/style.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="bg-body-tertiary">
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-        <div id="toast-notification" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body d-flex align-items-center gap-2">
-                    <span id="toast-icon"></span>
-                    <span id="toast-message"></span>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    </div>
+<body>
 
-    <!-- Mobile Top Bar -->
-    <nav class="navbar navbar-dark bg-dark d-md-none fixed-top border-bottom border-secondary-subtle shadow-sm mobile-header">
-        <div class="container-fluid">
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"
-                aria-controls="sidebarMenu" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand fw-bold d-flex align-items-center m-0" href="#">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
-                    <path d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
-                </svg>
-                VPS Monitor
-            </a>
-        </div>
-    </nav>
-
+    <!-- Dashboard View -->
     <div class="container-fluid h-100 p-0">
         <div class="row h-100 g-0">
+
             <!-- Sidebar -->
-            <div class="sidebar col-md-3 col-lg-2 p-0 bg-dark border-end border-secondary-subtle h-100 d-flex flex-column offcanvas-md offcanvas-start"
-                tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
-
-                <div class="offcanvas-header border-bottom border-secondary-subtle">
-                    <h5 class="offcanvas-title fw-bold text-light d-flex align-items-center" id="sidebarMenuLabel">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
-                            <path d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
-                        </svg>
-                        VPS Monitor
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                        data-bs-target="#sidebarMenu" aria-label="Close"></button>
-                </div>
-
-                <div class="offcanvas-body d-flex flex-column p-3 h-100 overflow-y-auto sidebar-scrollable">
-                    <!-- Desktop Title -->
-                    <div class="d-none d-md-flex align-items-center mb-4 px-2 text-light fw-bold fs-5 sidebar-brand">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
-                            <path d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
-                        </svg>
-                        VPS Monitor
-                    </div>
-
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-2 mt-2 mb-2 text-uppercase text-secondary small fw-bold">
-                        <span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                            </svg>
-                            Domains
-                        </span>
-                        <span id="domain-count" class="badge bg-secondary rounded-pill">0</span>
-                    </h6>
-
-                    <div id="domain-list" class="list-group list-group-flush mb-auto gap-1">
-                        <!-- Domains injected here -->
-                        <div class="domain-skeleton">
-                            <div class="skeleton-item"></div>
-                            <div class="skeleton-item"></div>
-                            <div class="skeleton-item"></div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 pt-3 border-top border-secondary-subtle sidebar-footer">
-                        <button id="logout-btn" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 logout-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-0 h-100 overflow-hidden d-flex flex-column main-content">
-
-                <!-- Stats Grid - Fixed Position -->
-                <div class="stats-container">
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 p-3">
-                        <!-- CPU -->
-                        <div class="col">
-                            <div class="stat-card">
-                                <div class="stat-icon stat-icon-cpu">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-                                        <rect x="9" y="9" width="6" height="6"></rect>
-                                        <line x1="9" y1="1" x2="9" y2="4"></line>
-                                        <line x1="15" y1="1" x2="15" y2="4"></line>
-                                        <line x1="9" y1="20" x2="9" y2="23"></line>
-                                        <line x1="15" y1="20" x2="15" y2="23"></line>
-                                        <line x1="20" y1="9" x2="23" y2="9"></line>
-                                        <line x1="20" y1="14" x2="23" y2="14"></line>
-                                        <line x1="1" y1="9" x2="4" y2="9"></line>
-                                        <line x1="1" y1="14" x2="4" y2="14"></line>
-                                    </svg>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">CPU Load</div>
-                                    <div class="stat-value" id="cpu-val">0%</div>
-                                    <div class="progress stat-progress">
-                                        <div id="cpu-bar" class="progress-bar progress-bar-cpu" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Memory -->
-                        <div class="col">
-                            <div class="stat-card">
-                                <div class="stat-icon stat-icon-memory">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M2 20h.01M7 20v-4"></path>
-                                        <path d="M12 20v-8"></path>
-                                        <path d="M17 20V8"></path>
-                                        <path d="M22 4v16"></path>
-                                    </svg>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Memory</div>
-                                    <div class="stat-value" id="mem-val">0%</div>
-                                    <div class="progress stat-progress">
-                                        <div id="mem-bar" class="progress-bar progress-bar-memory" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Disk -->
-                        <div class="col">
-                            <div class="stat-card">
-                                <div class="stat-icon stat-icon-disk">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                                    </svg>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Disk Usage</div>
-                                    <div class="stat-value" id="disk-val">0%</div>
-                                    <div class="progress stat-progress">
-                                        <div id="disk-bar" class="progress-bar progress-bar-disk" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Net Speed -->
-                        <div class="col">
-                            <div class="stat-card">
-                                <div class="stat-icon stat-icon-network">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-                                        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-                                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                                    </svg>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Network Speed</div>
-                                    <div class="network-speeds">
-                                        <div class="speed-item">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
-                                                <path d="M12 5v14M19 12l-7 7-7-7" />
-                                            </svg>
-                                            <span id="net-speed-down" class="speed-value">0 B/s</span>
-                                        </div>
-                                        <div class="speed-item">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
-                                                <path d="M12 19V5M5 12l7-7 7 7" />
-                                            </svg>
-                                            <span id="net-speed-up" class="speed-value">0 B/s</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bandwidth Row -->
-                    <div class="row g-3 px-3 pb-3">
-                        <div class="col-12">
-                            <div class="bandwidth-card">
-                                <div class="bandwidth-icon">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="12" y1="1" x2="12" y2="23"></line>
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                                    </svg>
-                                </div>
-                                <div class="bandwidth-content">
-                                    <div class="bandwidth-item">
-                                        <span class="bandwidth-label">Today</span>
-                                        <span id="bw-today-val" class="bandwidth-value">0 MB</span>
-                                    </div>
-                                    <div class="bandwidth-divider"></div>
-                                    <div class="bandwidth-item">
-                                        <span class="bandwidth-label">This Month</span>
-                                        <span id="bw-month-val" class="bandwidth-value">0 GB</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Log Viewer Section -->
-                <div class="logs-section flex-grow-1 d-flex flex-column overflow-hidden">
-                    <!-- Log Header -->
-                    <div class="logs-header">
-                        <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info flex-shrink-0">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                            </svg>
-                            <h2 class="logs-title m-0" id="current-domain">Select a Domain</h2>
-                        </div>
-                        <div class="logs-controls">
-                            <select id="max-logs-select" class="form-select form-select-sm logs-select">
-                                <option value="5">5 logs</option>
-                                <option value="10">10 logs</option>
-                                <option value="25">25 logs</option>
-                                <option value="50" selected>50 logs</option>
-                                <option value="100">100 logs</option>
-                                <option value="200">200 logs</option>
-                                <option value="500">500 logs</option>
-                                <option value="1000">1000 logs</option>
-                            </select>
-                            <button id="clear-logs" class="btn btn-sm btn-outline-secondary clear-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                                Clear
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Logs Container -->
-                    <div class="logs-content flex-grow-1 overflow-y-auto">
-                        <div id="logs-container" class="logs-list">
-                            <!-- Logs injected here -->
-                            <div class="empty-state">
-                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
-                                <p class="empty-state-text">No logs yet</p>
-                                <p class="empty-state-subtext">Select a domain to view request logs</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Log Details Modal -->
-    <div class="modal fade" id="log-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content log-modal-content">
-                <div class="modal-header log-modal-header">
-                    <h5 class="modal-title d-flex align-items-center gap-2">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        Request Details
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body log-modal-body" id="modal-body">
-                    <!-- Details injected here -->
-                </div>
-                <div class="modal-footer log-modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/app.js"></script>
-</body>
-
-</html>
-
-    <!-- Mobile Navbar -->
-    <nav class="navbar navbar-dark bg-dark d-md-none fixed-top border-bottom border-secondary-subtle">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"
-                aria-controls="sidebarMenu" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
-                    <path
-                        d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
-                </svg>
-                VPS Monitor
-            </a>
-        </div>
-    </nav>
-
-    <div class="container-fluid h-100 p-0">
-        <div class="row h-100 g-0">
-            <!-- Sidebar -->
-            <div class="sidebar col-md-3 col-lg-2 p-0 bg-dark border-end border-secondary-subtle h-100 d-flex flex-column offcanvas-md offcanvas-start"
-                tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
-
-                <div class="offcanvas-header border-bottom border-secondary-subtle">
-                    <h5 class="offcanvas-title fw-bold text-light d-flex align-items-center" id="sidebarMenuLabel">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
-                            <path
-                                d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
-                        </svg>
-                        VPS Monitor
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                        data-bs-target="#sidebarMenu" aria-label="Close"></button>
-                </div>
-
-                <div class="offcanvas-body d-flex flex-column p-3 h-100 overflow-y-auto">
-                    <!-- Desktop Title -->
-                    <div class="d-none d-md-flex align-items-center mb-4 px-2 text-light fw-bold fs-5">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-info">
-                            <path
-                                d="M12 2v20M2 12h20M12 2a10 10 0 0 1 10 10M2 12a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10M22 12a10 10 0 0 1-10-10" />
-                        </svg>
-                        VPS Monitor
-                    </div>
-
+            <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse border-end border-secondary-subtle"
+                id="sidebarMenu">
+                <div class="d-flex flex-column h-100 p-3">
+                    <a href="#"
+                        class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-white text-decoration-none fs-4 fw-bold p-2">
+                        <i class="fa-solid fa-server me-2 text-primary"></i> VPS Monitor
+                    </a>
+                    <hr class="text-secondary">
                     <h6
-                        class="sidebar-heading d-flex justify-content-between align-items-center px-2 mt-2 mb-2 text-uppercase text-secondary small fw-bold">
+                        class="sidebar-heading d-flex justify-content-between align-items-center px-2 mt-2 mb-2 text-secondary text-uppercase small fw-bold">
                         <span>Domains</span>
+                        <span class="badge bg-primary rounded-pill" id="domain-count">0</span>
                     </h6>
-
-                    <div id="domain-list" class="list-group list-group-flush mb-auto gap-1">
-                        <!-- Domains injected here -->
-                    </div>
-
-                    <div class="mt-4 pt-3 border-top border-secondary-subtle">
-                        <button id="logout-btn"
-                            class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
-                            Logout
-                        </button>
+                    <ul class="nav nav-pills flex-column mb-auto" id="domain-list">
+                        <!-- Domain items will be injected here -->
+                        <li class="nav-item text-center text-secondary small mt-3">Waiting for data...</li>
+                    </ul>
+                    <hr class="text-secondary">
+                    <div class="dropdown">
+                        <a href="#"
+                            class="d-flex align-items-center text-white text-decoration-none dropdown-toggle p-2 rounded hover-bg-dark-subtle"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://ui-avatars.com/api/?name=Admin&background=0D6EFD&color=fff" alt=""
+                                width="32" height="32" class="rounded-circle me-2">
+                            <strong>Admin</strong>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                            <li><a class="dropdown-item" href="#" id="logout-btn">Sign out</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
 
             <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 h-100 overflow-hidden d-flex flex-column pt-5 pt-md-0">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 h-100 overflow-y-auto bg-body-tertiary">
 
-                <!-- Stats Grid -->
+                <!-- Mobile Header -->
                 <div
-                    class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 py-3 border-bottom border-secondary-subtle bg-dark-subtle z-1 shadow-sm">
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-secondary-subtle d-md-none">
+                    <h1 class="h2 text-light">Dashboard</h1>
+                    <button class="navbar-toggler d-md-none collapsed border-0 text-light" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fa-solid fa-bars fa-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Desktop Header & Controls -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+                    <h1 class="h2 text-light fw-bold" id="page-title">System Overview</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary text-light">Share</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary text-light">Export</button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle text-light">
+                            <i class="fa-regular fa-calendar me-1"></i> This Week
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resource Cards -->
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-4">
                     <!-- CPU -->
                     <div class="col">
-                        <div class="card h-100 border-0 bg-dark text-light shadow-sm">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="text-secondary small fw-bold text-uppercase">CPU Load</span>
-                                    <span id="cpu-val" class="font-monospace fw-bold text-info">0%</span>
+                        <div class="card h-100 bg-dark text-light border-0 shadow-sm hover-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title text-secondary text-uppercase mb-0 fw-bold">CPU Usage</h6>
+                                    <i class="fa-solid fa-microchip text-info"></i>
                                 </div>
-                                <div class="progress" style="height: 4px;" role="progressbar">
-                                    <div id="cpu-bar" class="progress-bar bg-info" style="width: 0%"></div>
+                                <h3 class="fw-bold mb-2" id="cpu-val">0%</h3>
+                                <div class="progress" style="height: 6px;">
+                                    <div id="cpu-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Memory -->
+                    <!-- RAM -->
                     <div class="col">
-                        <div class="card h-100 border-0 bg-dark text-light shadow-sm">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="text-secondary small fw-bold text-uppercase">Memory</span>
-                                    <span id="mem-val" class="font-monospace fw-bold text-primary">0%</span>
+                        <div class="card h-100 bg-dark text-light border-0 shadow-sm hover-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title text-secondary text-uppercase mb-0 fw-bold">Memory</h6>
+                                    <i class="fa-solid fa-memory text-warning"></i>
                                 </div>
-                                <div class="progress" style="height: 4px;" role="progressbar">
-                                    <div id="mem-bar" class="progress-bar bg-primary" style="width: 0%"></div>
+                                <h3 class="fw-bold mb-2" id="ram-val">0%</h3>
+                                <div class="progress" style="height: 6px;">
+                                    <div id="ram-bar" class="progress-bar bg-warning" role="progressbar"
+                                        style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                     <!-- Disk -->
                     <div class="col">
-                        <div class="card h-100 border-0 bg-dark text-light shadow-sm">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="text-secondary small fw-bold text-uppercase">Disk</span>
-                                    <span id="disk-val" class="font-monospace fw-bold text-warning">0%</span>
+                        <div class="card h-100 bg-dark text-light border-0 shadow-sm hover-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title text-secondary text-uppercase mb-0 fw-bold">Disk Usage</h6>
+                                    <i class="fa-solid fa-hard-drive text-danger"></i>
                                 </div>
-                                <div class="progress" style="height: 4px;" role="progressbar">
-                                    <div id="disk-bar" class="progress-bar bg-warning" style="width: 0%"></div>
+                                <h3 class="fw-bold mb-2" id="disk-val">0%</h3>
+                                <div class="progress" style="height: 6px;">
+                                    <div id="disk-bar" class="progress-bar bg-danger" role="progressbar"
+                                        style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Net Speed -->
+                    <!-- Uptime -->
                     <div class="col">
-                        <div class="card h-100 border-0 bg-dark text-light shadow-sm">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <span class="text-secondary small fw-bold text-uppercase">Net Speed</span>
+                        <div class="card h-100 bg-dark text-light border-0 shadow-sm hover-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title text-secondary text-uppercase mb-0 fw-bold">Uptime</h6>
+                                    <i class="fa-solid fa-clock text-success"></i>
                                 </div>
-                                <div class="d-flex flex-column gap-2">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80"
-                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 5v14M19 12l-7 7-7-7" />
-                                            </svg>
-                                            <span class="text-secondary small">Down</span>
-                                        </div>
-                                        <span id="net-speed-down" class="font-monospace fw-bold text-success small">0
-                                            B/s</span>
+                                <h4 class="fw-bold mb-0 font-monospace" id="uptime-val">--</h4>
+                                <small class="text-secondary">System Online</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Stats & Graph Row -->
+                <div class="row g-4 mb-4">
+                    <!-- Network Stats -->
+                    <div class="col-lg-4">
+                        <div class="card h-100 bg-dark text-light border-0 shadow-sm">
+                            <div class="card-header border-secondary bg-transparent py-3">
+                                <h5 class="mb-0 fw-bold"><i
+                                        class="fa-solid fa-network-wired me-2 text-primary"></i>Network Activity</h5>
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-center gap-4">
+                                <!-- Live Speed -->
+                                <div class="p-3 rounded bg-dark-subtle border border-secondary-subtle">
+                                    <h6 class="text-secondary text-uppercase small fw-bold mb-3">Live Throughput</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-success"><i
+                                                class="fa-solid fa-arrow-down me-2"></i>Download</span>
+                                        <span class="font-monospace fw-bold fs-5" id="net-down">0 KB/s</span>
                                     </div>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
-                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 19V5M5 12l7-7 7 7" />
-                                            </svg>
-                                            <span class="text-secondary small">Up</span>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-info"><i class="fa-solid fa-arrow-up me-2"></i>Upload</span>
+                                        <span class="font-monospace fw-bold fs-5" id="net-up">0 KB/s</span>
+                                    </div>
+                                </div>
+                                <!-- Bandwidth -->
+                                <div class="p-3 rounded bg-dark-subtle border border-secondary-subtle">
+                                    <h6 class="text-secondary text-uppercase small fw-bold mb-3">Bandwidth Usage</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-light">Today</span>
+                                        <span class="font-monospace fw-bold fs-5" id="bw-today">0 MB</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 4px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%">
                                         </div>
-                                        <span id="net-speed-up" class="font-monospace fw-bold text-info small">0
-                                            B/s</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-light">This Month</span>
+                                        <span class="font-monospace fw-bold fs-5" id="bw-month">0 GB</span>
+                                    </div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Bandwidth (Full width on mobile/tablet, 1 col on XL if we want, but let's make it span full row or fit in grid) -->
-                    <!-- User asked for responsive. Let's put Bandwidth as a separate full-width card or part of the grid? -->
-                    <!-- Previous design had it as col-12 col-xl. Let's keep it as a separate row or integrate it. -->
-                    <!-- Let's make it a separate row below stats for better visibility as it has more content -->
-                </div>
-
-                <!-- Bandwidth Row -->
-                <div class="row g-3 px-3 pb-3 bg-dark-subtle border-bottom border-secondary-subtle shadow-sm z-1">
-                    <div class="col-12">
-                        <div class="card border-0 bg-dark text-light shadow-sm">
+                    <!-- Live Graph -->
+                    <div class="col-lg-8">
+                        <div class="card h-100 bg-dark text-light border-0 shadow-sm">
                             <div
-                                class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                                <div>
-                                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Bandwidth
-                                        Today</span>
-                                    <span id="bw-today-val" class="font-monospace fw-bold text-light fs-4">0 MB</span>
-                                </div>
-                                <div
-                                    class="d-flex align-items-center gap-3 pt-2 pt-md-0 border-top border-md-0 border-secondary-subtle">
-                                    <span class="text-secondary small">This Month:</span>
-                                    <span id="bw-month-val" class="font-monospace fw-bold text-info fs-5">0 GB</span>
-                                </div>
+                                class="card-header border-secondary bg-transparent py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chart-line me-2 text-warning"></i>Live
+                                    Metrics</h5>
+                                <span class="badge bg-danger animate-pulse">LIVE</span>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="liveChart" style="width: 100%; height: 300px;"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Log Viewer Header -->
-                <div
-                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 px-2 border-bottom border-secondary-subtle">
-                    <h1 class="h4 text-light mb-0 text-truncate" id="current-domain">Select a Domain</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0 gap-2">
-                        <select id="max-logs-select"
-                            class="form-select form-select-sm bg-dark text-light border-secondary">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50" selected>50</option>
-                            <option value="100">100</option>
-                            <option value="200">200</option>
-                            <option value="500">500</option>
-                            <option value="1000">1000</option>
-                        </select>
-                        <button id="clear-logs" class="btn btn-sm btn-outline-secondary">Clear Logs</button>
+                <!-- Access Logs Section -->
+                <div class="card bg-dark text-light border-0 shadow-sm mb-5">
+                    <div
+                        class="card-header border-secondary bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-list-ul me-2 text-success"></i>Access Logs <span
+                                id="current-domain-badge" class="badge bg-secondary ms-2">All</span></h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="rows-select" class="text-secondary small text-nowrap">Show rows:</label>
+                            <select id="rows-select"
+                                class="form-select form-select-sm bg-dark-subtle text-light border-secondary"
+                                style="width: auto;">
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                                <option value="500">500</option>
+                                <option value="1000">1000</option>
+                            </select>
+                            <button id="clear-logs" class="btn btn-sm btn-outline-secondary">Clear</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle text-nowrap">
+                                <thead class="bg-dark-subtle">
+                                    <tr>
+                                        <th scope="col" class="ps-4">Time</th>
+                                        <th scope="col">Method</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Path</th>
+                                        <th scope="col" class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table-body">
+                                    <!-- Logs injected here -->
+                                </tbody>
+                            </table>
+                            <div id="empty-state" class="text-center py-5 d-none">
+                                <i class="fa-regular fa-folder-open fa-3x text-secondary mb-3"></i>
+                                <p class="text-secondary">No logs received yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer border-secondary bg-transparent py-3">
+                        <small class="text-secondary" id="log-status-text">Waiting for requests...</small>
                     </div>
                 </div>
 
-                <!-- Logs Container -->
-                <div class="table-responsive flex-grow-1 overflow-y-auto px-3">
-                    <div id="logs-container" class="d-flex flex-column gap-2 pb-5">
-                        <!-- Logs injected here -->
-                    </div>
-                </div>
             </main>
         </div>
     </div>
 
     <!-- Details Modal -->
-    <div class="modal fade" id="log-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content bg-dark text-light border-secondary">
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border border-secondary">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title">Log Details</h5>
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2 text-info"></i>Request
+                        Details</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="modal-body">
-                    <!-- Details injected here -->
+                <div class="modal-body p-4">
+                    <div class="row g-3" id="modal-content">
+                        <!-- Content injected via JS -->
+                    </div>
                 </div>
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -562,11 +290,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/app.js"></script>
+    <script src="js/app.js"></script>
 </body>
 
 </html>
