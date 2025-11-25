@@ -104,7 +104,7 @@ const startMonitoring = () => {
         } catch (error) {
             console.error('Error fetching system stats:', error);
         }
-    }, 2000);
+    }, 1000);
 };
 
 module.exports = { init };

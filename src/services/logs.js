@@ -120,6 +120,43 @@ const startWatching = () => {
             readNewLines(filePath);
         });
     }, 1000);
+
+    // Periodic directory scan for new files (fallback for chokidar)
+    setInterval(() => {
+        scanForNewFiles();
+    }, 5000);
+};
+
+const scanForNewFiles = () => {
+    try {
+        if (!fs.existsSync(config.LOG_DIR)) return;
+
+        const files = fs.readdirSync(config.LOG_DIR);
+        files.forEach(file => {
+            if (file.endsWith('.log')) {
+                const filePath = path.join(config.LOG_DIR, file);
+                const domain = file.replace('.log', '');
+
+                if (!domains.has(domain)) {
+                    console.log(`[Scanner] Discovered new domain: ${domain}`);
+                    domains.add(domain);
+                    domainFiles[domain] = filePath;
+
+                    // Initialize offset
+                    try {
+                        const stats = fs.statSync(filePath);
+                        fileOffsets[filePath] = stats.size;
+                    } catch (e) {
+                        fileOffsets[filePath] = 0;
+                    }
+
+                    if (io) io.emit('new_domain', domain);
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Error scanning for new files:', err);
+    }
 };
 
 const readNewLines = (filePath) => {
