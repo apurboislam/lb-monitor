@@ -29,8 +29,14 @@ router.post('/login', (req, res) => {
     const verified = authService.verifyToken(token);
     if (verified) {
         loginAttempts.delete(ip); // Reset on success
-        req.session.authenticated = true;
-        res.json({ success: true });
+        req.session.regenerate((err) => {
+            if (err) {
+                console.error('Session regeneration error:', err);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
+            req.session.authenticated = true;
+            res.json({ success: true });
+        });
     } else {
         // Record failed attempt
         if (!loginAttempts.has(ip)) {

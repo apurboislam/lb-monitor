@@ -4,6 +4,8 @@ const socketIo = require('socket.io');
 const session = require('express-session');
 const path = require('path');
 const config = require('./config');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const authService = require('./services/auth');
 const monitorService = require('./services/monitor');
@@ -17,15 +19,34 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // Middleware
+app.use(helmet());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use(limiter);
+
 // Session Setup
+if (config.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Trust first proxy
+}
+
 const sessionMiddleware = session({
     secret: config.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 10 * 60 * 1000 } // 10 minutes
+    cookie: {
+        secure: config.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 10 * 60 * 1000 // 10 minutes
+    }
 });
 
 app.use(sessionMiddleware);
