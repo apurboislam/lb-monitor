@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     x: { display: false }
                 },
                 animation: {
-                    duration: 500,
+                    duration: 1000,
                     easing: 'easeOutQuart'
                 }
             }
