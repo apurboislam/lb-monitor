@@ -10,6 +10,7 @@ services:
       - TOTP_SECRET=${TOTP_SECRET}
       - LOG_DIR=${LOG_DIR}
       - PANEL_NAME=${PANEL_NAME}
+      - TZ=Asia/Dhaka
     volumes:
       - ${LOG_DIR}:/opt/caddy/logs:ro
       - /var/lib/vnstat:/var/lib/vnstat:ro

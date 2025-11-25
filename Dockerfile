@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN apk add --no-cache python3 make g++ vnstat
+RUN apk add --no-cache python3 make g++ vnstat tzdata
 RUN npm install --production
 
 COPY . .
