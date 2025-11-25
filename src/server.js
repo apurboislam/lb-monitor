@@ -19,7 +19,17 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+            connectSrc: ["'self'", "ws:", "wss:", "https://load.apstech.com.bd"],
+            imgSrc: ["'self'", "data:"],
+        },
+    },
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -30,7 +40,7 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use(limiter);
+app.use('/api', limiter);
 
 // Session Setup
 if (config.NODE_ENV === 'production') {
