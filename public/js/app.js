@@ -52,10 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // System Stats
+    // System Stats (Text)
     socket.on('stats', (stats) => {
         updateStats(stats);
-        updateChart(stats);
+    });
+
+    // Graph Stats (Chart)
+    socket.on('graph_stats', (data) => {
+        updateChart(data);
     });
 
     // Domain Discovery
@@ -142,6 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
         gradientRam.addColorStop(0, 'rgba(255, 193, 7, 0.5)');
         gradientRam.addColorStop(1, 'rgba(255, 193, 7, 0.0)');
 
+        const gradientNet = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientNet.addColorStop(0, 'rgba(25, 135, 84, 0.5)');
+        gradientNet.addColorStop(1, 'rgba(25, 135, 84, 0.0)');
+
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -155,7 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         borderWidth: 2,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 0
+                        pointRadius: 0,
+                        yAxisID: 'y'
                     },
                     {
                         label: 'RAM',
@@ -165,7 +174,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         borderWidth: 2,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 0
+                        pointRadius: 0,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Network',
+                        data: Array(20).fill(0),
+                        borderColor: '#198754',
+                        backgroundColor: gradientNet,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        yAxisID: 'y1'
                     }
                 ]
             },
@@ -176,8 +197,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 scales: {
                     y: {
                         beginAtZero: true,
+                        max: 100,
                         grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        ticks: { color: '#8b949e' }
+                        ticks: { color: '#8b949e', callback: (val) => val + '%' },
+                        position: 'left'
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false }, // only want the grid lines for one axis to show up
+                        ticks: {
+                            color: '#198754',
+                            callback: (val) => formatBytes(val) + '/s'
+                        },
+                        position: 'right'
                     },
                     x: { display: false }
                 },
@@ -189,17 +221,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateChart(stats) {
+    function updateChart(data) {
         if (!chartInstance) return;
 
         const dataCpu = chartInstance.data.datasets[0].data;
         const dataRam = chartInstance.data.datasets[1].data;
+        const dataNet = chartInstance.data.datasets[2].data;
 
         dataCpu.shift();
         dataRam.shift();
+        dataNet.shift();
 
-        dataCpu.push(stats.cpu);
-        dataRam.push(stats.mem.percentage);
+        dataCpu.push(data.cpu);
+        dataRam.push(data.mem);
+        dataNet.push(data.network);
 
         chartInstance.update();
     }

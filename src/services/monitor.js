@@ -70,6 +70,7 @@ const getNetworkStats = async () => {
 };
 
 const startMonitoring = () => {
+    let tick = 0;
     setInterval(async () => {
         try {
             const [cpu, mem, disk, network, time] = await Promise.all([
@@ -99,7 +100,18 @@ const startMonitoring = () => {
             };
 
             if (io) {
+                // Always emit text stats (1s)
                 io.emit('stats', stats);
+
+                // Emit graph stats every 2 ticks (2s)
+                tick++;
+                if (tick % 2 === 0) {
+                    io.emit('graph_stats', {
+                        cpu: stats.cpu,
+                        mem: stats.mem.percentage,
+                        network: stats.network ? (stats.network.speed.rx + stats.network.speed.tx) : 0
+                    });
+                }
             }
         } catch (error) {
             console.error('Error fetching system stats:', error);
